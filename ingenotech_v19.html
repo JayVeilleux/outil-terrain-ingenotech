@@ -739,6 +739,7 @@ td:last-child{text-align:right;font-weight:500}
   <button class="btn on" id="btn-hydro" onclick="tglL('hydro')">Cours eau</button>
   <button class="btn on" id="btn-road" onclick="tglL('road')">Routes</button>
   <button class="btn on" id="btn-flood" onclick="tglL('flood')">Inondations</button>
+  <button class="btn on" id="btn-mh" onclick="tglL('mh')">Milieux humides</button>
   <button class="btn on" id="btn-zones" onclick="tglZ()">Zones couleurs</button>
 </div>
 </div>
@@ -813,7 +814,7 @@ c:[{"no_lot": "1 468 630", "coords": [[45.36878169890002, -71.96693431749998], [
 
 document.addEventListener('DOMContentLoaded', function() {
 
-var MAP, WMS={}, WON={hydro:true,road:true,flood:true};
+var MAP, WMS={}, WON={hydro:true,road:true,flood:true,mh:true};
 var ALot=null, ABnd=null, LPoly={};
 var OWater=[], OBldg=[], OLayer;
 var ZLayer, ZOn=true, STEP=0.000035;
@@ -869,7 +870,8 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:21,att
 WMS={
   hydro:L.tileLayer.wms('https://servicescarto.mrnf.gouv.qc.ca/pes/services/Territoire/GRHQ_WMS/MapServer/WMSServer',{layers:'0,1,2,3,4,5,6,7,8,9',format:'image/png',transparent:true,opacity:.85,maxZoom:21}),
   road:L.tileLayer.wms('https://servicescarto.mrnf.gouv.qc.ca/pes/services/Territoire/AQreseau_WMS/MapServer/WMSServer',{layers:'0,1,2,3,4,5',format:'image/png',transparent:true,opacity:.7,maxZoom:21}),
-  flood:L.tileLayer.wms('https://servicesvecto3.mern.gouv.qc.ca/geoserver/GrilleInfoZI_Pub/wms',{layers:'GrilleInfoZI_Pub',format:'image/png',transparent:true,opacity:.5,maxZoom:21})
+  flood:L.tileLayer.wms('https://servicesvecto3.mern.gouv.qc.ca/geoserver/GrilleInfoZI_Pub/wms',{layers:'GrilleInfoZI_Pub',format:'image/png',transparent:true,opacity:.5,maxZoom:21}),
+  mh:L.tileLayer.wms('https://geo.environnement.gouv.qc.ca/donnees/services/Biodiversite/MH_potentiels/MapServer/WMSServer',{layers:'Milieux_humides_potentiels11904',format:'image/png',transparent:true,opacity:.6,maxZoom:21})
 };
 Object.keys(WMS).forEach(function(k){WMS[k].addTo(MAP);});
 OLayer=L.layerGroup().addTo(MAP);
