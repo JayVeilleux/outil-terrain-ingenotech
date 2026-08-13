@@ -680,12 +680,12 @@ body{display:flex;flex-direction:column;height:100vh;overflow:hidden;background:
 #sep:hover{background:#aaa}
 #sep-inner{width:32px;height:2px;background:#999;border-radius:1px;pointer-events:none}
 #pnl{flex:1;overflow-y:auto;background:#fff}
-#capbar{display:none;flex:1;flex-direction:column;background:#fff;border-top:2px solid #1a5fa8;padding:10px 16px;overflow-y:auto}
-#capbar .cb-title{font-size:13px;font-weight:700;color:#1a5fa8;margin-bottom:8px}
-#capbar .cb-legend{display:flex;flex-wrap:wrap;gap:10px 18px}
+#capbar{display:none;flex:0 0 auto;flex-direction:column;background:#fff;border-top:2px solid #1a5fa8;padding:8px 16px;box-sizing:border-box}
+#capbar .cb-title{font-size:13px;font-weight:700;color:#1a5fa8;margin-bottom:6px;text-align:center}
+#capbar .cb-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 18px}
 #capbar .cb-item{display:flex;align-items:center;gap:6px;font-size:11px;color:#333}
 #capbar .cb-sw{width:14px;height:14px;border-radius:3px;flex-shrink:0}
-#capbar .cb-foot{margin-top:8px;font-size:10px;color:#999}
+#capbar .cb-foot{margin-top:6px;font-size:10px;color:#999;text-align:center}
 .ctrl{padding:10px 14px}
 .s{margin-bottom:12px}
 .st{font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
@@ -1064,10 +1064,19 @@ function buildCapLegend(){
   document.getElementById('capbar').innerHTML=html;
 }
 var CAP_W_M=350,CAP_H_M=300;
-function frameLot(availW,availH){
+function frameLot(availW,totalAvailH){
   var ratio=CAP_W_M/CAP_H_M;
+  var capbar=document.getElementById('capbar');
+  // pass 1: rough width estimate (ignoring legend height) to size the legend bar
   var w=availW,h=w/ratio;
-  if(h>availH){h=availH;w=h*ratio;}
+  if(h>totalAvailH){h=totalAvailH;w=h*ratio;}
+  capbar.style.width=w+'px';
+  capbar.style.margin='0 auto';
+  var legH=capbar.offsetHeight;
+  // pass 2: map gets all remaining height once the legend's real height is known
+  var availH=totalAvailH-legH;
+  w=availW;h=w/ratio;
+  if(h>availH){h=availH;w=h*ratio;capbar.style.width=w+'px';}
   mapEl.style.width=w+'px';
   mapEl.style.height=h+'px';
   mapEl.style.margin='0 auto';
@@ -1096,7 +1105,7 @@ window.tglCapture=function(){
     if(MAP.tap)MAP.tap.disable();
     MAP.zoomControl.remove();
     btn.textContent='Reprendre';btn.className='btn sel';
-    frameLot(window.innerWidth,window.innerHeight-hdrH-capbar.offsetHeight);
+    frameLot(window.innerWidth,window.innerHeight-hdrH);
   } else {
     capbar.style.display='none';
     pnl.style.display='';sep.style.display='';osmbar.style.display='';sb.style.display='';
