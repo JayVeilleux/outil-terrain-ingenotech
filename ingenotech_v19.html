@@ -740,7 +740,7 @@ td:last-child{text-align:right;font-weight:500}
 </div>
 <div class="cards">
   <div class="card"><div class="l">Lot actif</div><div class="v" id="cl">-</div></div>
-  <div class="card"><div class="l">Lots voisins</div><div class="v" id="cn">-</div></div>
+  <div class="card"><div class="l">Lots voisins (100m)</div><div class="v" id="cn">-</div></div>
 </div>
 <div class="s">
 <div class="st">Couches</div>
@@ -892,19 +892,23 @@ function loadLot(noLotRaw){
     document.getElementById('cl').textContent=ALot.no_lot;
     document.getElementById('lotinput').value=ALot.no_lot;
     setSb('Lot '+ALot.no_lot+' charge',true);
-    loadNeighbors(f.geometry);
+    loadNeighbors();
     loadOSM();
     loadMH();
   }).catch(function(){setSb('Erreur de recherche - verifie ta connexion internet',false);});
 }
 
-function loadNeighbors(geom){
+var NBR_BUF_M=100;
+function loadNeighbors(){
   NbrLayer.clearLayers();
   document.getElementById('cn').textContent='...';
-  var esriGeom=JSON.stringify({rings:geom.coordinates,spatialReference:{wkid:4326}});
+  var latMid=(ABnd.sla+ABnd.nla)/2;
+  var bufLat=NBR_BUF_M/111320;
+  var bufLng=NBR_BUF_M/(111320*Math.cos(latMid*Math.PI/180));
+  var bbox=[ABnd.wln-bufLng,ABnd.sla-bufLat,ABnd.eln+bufLng,ABnd.nla+bufLat].join(',');
   var url=CAD_URL+'?f=geojson&outSR=4326&returnGeometry=true&outFields=NO_LOT'
-    +'&geometryType=esriGeometryPolygon&spatialRel=esriSpatialRelIntersects&inSR=4326'
-    +'&geometry='+encodeURIComponent(esriGeom);
+    +'&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&inSR=4326'
+    +'&geometry='+bbox;
   fetch(url).then(function(r){return r.json();}).then(function(data){
     var n=0;
     (data.features||[]).forEach(function(f){
