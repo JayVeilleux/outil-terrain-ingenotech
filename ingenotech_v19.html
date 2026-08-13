@@ -709,7 +709,7 @@ td:last-child{text-align:right;font-weight:500}
 </head>
 <body>
 <div id="hdr">
-  <div><h1>Ingenotech - Outil terrain</h1><p>Lots officiels - Sherbrooke</p></div>
+  <div><h1>Ingenotech - Outil terrain</h1><p>Information sur un lot et ses voisins</p></div>
   <div style="display:flex;gap:5px">
     <button class="btn" onclick="tglPnl()" style="padding:4px 8px;font-size:11px">Panneau</button>
     <button class="btn" onclick="rezoom()" style="padding:4px 8px;font-size:11px">Recentrer</button>
@@ -724,17 +724,19 @@ td:last-child{text-align:right;font-weight:500}
   <button class="btn" onclick="loadOSM()" style="margin-left:auto;padding:2px 7px;font-size:10px">Recharger OSM</button>
   <button class="btn" onclick="loadMH()" style="padding:2px 7px;font-size:10px">Recharger MH</button>
 </div>
-<div id="sb">Selectionne un lot puis un outil</div>
+<div id="sb">Entrez un numero de lot pour commencer</div>
 <div id="sep"><div id="sep-inner"></div></div>
 <div id="pnl"><div class="ctrl">
 <div class="s">
-<div class="st">Lot actif</div>
-<select id="lsel"><option value="">-- Choisir un lot --</option></select>
-<div class="row" id="lbtns"></div>
+<div class="st">Recherche de lot</div>
+<div class="row">
+  <input id="lotinput" type="text" placeholder="No de lot (ex: 6 568 623)" style="flex:1;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px">
+  <button class="btn on" onclick="searchLot()">Rechercher</button>
+</div>
 </div>
 <div class="cards">
-  <div class="card"><div class="l">Lot</div><div class="v" id="cl">-</div></div>
-  <div class="card"><div class="l">Superficie</div><div class="v" id="cs">-</div></div>
+  <div class="card"><div class="l">Lot actif</div><div class="v" id="cl">-</div></div>
+  <div class="card"><div class="l">Lots voisins</div><div class="v" id="cn">-</div></div>
 </div>
 <div class="s">
 <div class="st">Couches</div>
@@ -743,52 +745,15 @@ td:last-child{text-align:right;font-weight:500}
   <button class="btn on" id="btn-road" onclick="tglL('road')">Routes</button>
   <button class="btn on" id="btn-flood" onclick="tglL('flood')">Inondations</button>
   <button class="btn on" id="btn-mh" onclick="tglL('mh')">Milieux humides</button>
-  <button class="btn on" id="btn-zones" onclick="tglZ()">Zones couleurs</button>
 </div>
 </div>
 <div class="s">
 <div class="st">Legende</div>
-<div class="lg"><div class="ld" style="background:rgba(30,150,80,.5)"></div>Conforme - test possible</div>
-<div class="lg"><div class="ld" style="background:rgba(255,180,0,.5)"></div>Zone tampon</div>
-<div class="lg"><div class="ld" style="background:rgba(210,50,50,.5)"></div>Non conforme</div>
-<div class="lg"><div class="ld" style="background:#1565c0;height:3px;border-radius:2px"></div>Eau OSM (15m depuis bord)</div>
-<div class="lg"><div class="ld" style="background:#0288d1;border-radius:50%"></div>Bord eau manuel (15m)</div>
-<div class="lg"><div class="ld" style="background:#e65100;border-radius:50%"></div>Batiment existant (5m)</div>
-<div class="lg"><div class="ld" style="background:#5d4037"></div>Maison future (5m depuis bord)</div>
-<div class="lg"><div class="ld" style="background:#37474f;border-radius:50%"></div>Puits (30m)</div>
-<div class="lg"><div class="ld" style="background:#26a69a;border:1px dashed #00695c"></div>Marais/etang detecte (10-15m selon systeme)</div>
-</div>
-<div class="s">
-<div class="st">Type de systeme septique</div>
-<div class="row">
-  <button class="btn" id="sys-etanche" onclick="setSys('etanche')">Etanche - art. 7.1 (10m)</button>
-  <button class="btn sel" id="sys-nonetanche" onclick="setSys('nonetanche')">Non etanche - art. 7.2 (15m)</button>
-</div>
-</div>
-<div class="s">
-<div class="st">Dimensions maison</div>
-<div class="slr"><label>Largeur (pi)</label><input type="range" id="hw" min="20" max="100" value="40" oninput="updHS()"><span id="hwv">40 pi</span></div>
-<div class="slr"><label>Profondeur (pi)</label><input type="range" id="hd" min="20" max="100" value="40" oninput="updHS()"><span id="hdv">40 pi</span></div>
-<div style="font-size:11px;color:#999">Superficie: <span id="ha" style="font-weight:600;color:#333">1600 pi2</span></div>
-</div>
-<div class="s">
-<div class="st">Outils - clique carte, glisse pour deplacer</div>
-<div class="row">
-  <button class="btn sel" id="tool-house" onclick="setT('house')">+ Maison</button>
-  <button class="btn" id="tool-well" onclick="setT('well')">+ Puits 30m</button>
-  <button class="btn" id="tool-water" onclick="setT('water')">+ Bord eau 15m</button>
-  <button class="btn" id="tool-gps" onclick="setT('gps')">GPS</button>
-</div>
-</div>
-<div class="s">
-<div class="st">Elements places <span id="ec" style="font-weight:400;color:#999">(0)</span></div>
-<div id="elist"><span style="color:#bbb;font-size:12px">Aucun element</span></div>
-</div>
-<div class="s">
-<div class="row">
-  <button class="btn" onclick="locMe()">Ma position GPS</button>
-  <button class="btn" onclick="clrAll()" style="color:#c62828;border-color:#e57373">Effacer tout</button>
-</div>
+<div class="lg"><div class="ld" style="background:#1a5fa8"></div>Lot recherche</div>
+<div class="lg"><div class="ld" style="background:#aaa"></div>Lot voisin (clic pour changer)</div>
+<div class="lg"><div class="ld" style="background:#1565c0;height:3px;border-radius:2px"></div>Cours eau OSM</div>
+<div class="lg"><div class="ld" style="background:#e65100;border-radius:50%"></div>Batiment existant</div>
+<div class="lg"><div class="ld" style="background:#26a69a;border:1px dashed #00695c"></div>Marais/etang detecte</div>
 </div>
 <div class="s">
 <div class="st">Q-2 r.22 - Distances minimales</div>
@@ -797,7 +762,8 @@ td:last-child{text-align:right;font-weight:500}
 <tr><td>Puits voisin</td><td>30 m</td></tr>
 <tr><td>Residence (du bord)</td><td>5 m</td></tr>
 <tr><td>Limite de propriete</td><td>2 m</td></tr>
-<tr><td>Marais / etang (art. 7.1/7.2)</td><td id="mhlim">15 m du bord</td></tr>
+<tr><td>Marais/etang - systeme etanche (art. 7.1)</td><td>10 m</td></tr>
+<tr><td>Marais/etang - systeme non etanche (art. 7.2)</td><td>15 m</td></tr>
 <tr><td>Zone inondable</td><td style="color:#c62828">Interdit</td></tr>
 </table>
 </div>
@@ -811,30 +777,16 @@ td:last-child{text-align:right;font-weight:500}
 //# sourceMappingURL=leaflet.js.map
 </script>
 <script>
-var GD={
-lat:45.367605,
-lng:-71.96657,
-slat:45.366191,
-nlat:45.369141,
-wlng:-71.968647,
-elng:-71.964151,
-o:[{"no_lot": "1 468 281", "coords": [[45.367329788, -71.965393167], [45.3673501713, -71.9658880683], [45.3676252299, -71.9658974978], [45.367598552, -71.9652500689], [45.3675972143, -71.9652175704], [45.3675858254, -71.9652294998], [45.3675732471, -71.9652397363], [45.3675489509, -71.9652578851], [45.3675363726, -71.9652681229], [45.3675104467, -71.965283882], [45.3674986978, -71.9652941412], [45.3674869489, -71.9653043991], [45.3674642364, -71.9653231071], [45.3674517482, -71.9653316556], [45.3674383856, -71.965338351], [45.367425023, -71.9653450476], [45.3674116755, -71.9653505702], [45.3673983129, -71.9653572668], [45.3673857647, -71.9653651577], [45.3673724021, -71.9653718543], [45.3673590546, -71.9653773768], [45.3673465064, -71.9653852676], [45.367329788, -71.965393167]], "superficie": 1384.0}, {"no_lot": "1 468 283", "coords": [[45.367598552, -71.9652500689], [45.3676252299, -71.9658974978], [45.3680364616, -71.9659114285], [45.3680050739, -71.9651513655], [45.3679935861, -71.9651615422], [45.3679794844, -71.965161178], [45.3679620191, -71.9651642479], [45.367947073, -71.9651650365], [45.367932141, -71.9651646509], [45.3679138924, -71.9651641797], [45.3678989604, -71.9651637941], [45.3678848738, -71.9651622559], [45.3678666242, -71.9651617846], [45.3678516932, -71.9651613991], [45.3678333984, -71.9651644475], [45.367820081, -71.9651676245], [45.367803446, -71.9651707159], [45.3677868251, -71.9651726331], [45.3677685614, -71.9651733347], [45.3677536144, -71.9651741232], [45.3677394977, -71.9651749319], [45.3677261803, -71.9651781089], [45.367718504, -71.9651943405], [45.3677051716, -71.9651986903], [45.3676918391, -71.9652030401], [45.3676785217, -71.9652062171], [45.3676652043, -71.9652093928], [45.3676502431, -71.9652113542], [45.3676368806, -71.9652180509], [45.367625946, -71.965229503], [45.3676141971, -71.9652397622], [45.367598552, -71.9652500689]], "superficie": 2586.0}, {"no_lot": "6 477 747", "coords": [[45.3673582674, -71.9675260874], [45.3673833322, -71.9660448633], [45.3673488125, -71.9660436887], [45.3671913643, -71.9660435333], [45.3671909241, -71.9669427229], [45.3671905735, -71.9676466719], [45.3672085195, -71.9676337674], [45.3672409457, -71.9676104506], [45.3672635843, -71.9675941718], [45.3672704526, -71.967589233], [45.3673582674, -71.9675260874]], "superficie": 2409.0}, {"no_lot": "6 568 621", "coords": [[45.3681280548, -71.9660644679], [45.3680362451, -71.9660670803], [45.3678768651, -71.9660616569], [45.3678581706, -71.9671666148], [45.3681407398, -71.9669634206], [45.3681280548, -71.9660644679]], "superficie": 2321.8}, {"no_lot": "6 568 622", "coords": [[45.3678581706, -71.9671666148], [45.3678768651, -71.9660616569], [45.3677123539, -71.966056059], [45.3676915368, -71.9672864394], [45.3678581706, -71.9671666148]], "superficie": 1673.7}, {"no_lot": "6 568 623", "coords": [[45.3675478426, -71.9660504611], [45.3675249029, -71.9674062632], [45.3676915368, -71.9672864394], [45.3677123539, -71.966056059], [45.3675478426, -71.9660504611]], "superficie": 1853.5}, {"no_lot": "6 568 624", "coords": [[45.3673582674, -71.9675260874], [45.3673614728, -71.9675237825], [45.3675249029, -71.9674062632], [45.3675478426, -71.9660504611], [45.3673833322, -71.9660448633], [45.3673582674, -71.9675260874]], "superficie": 2033.2}],
-c:[{"no_lot": "1 468 630", "coords": [[45.36878169890002, -71.96693431749998], [45.368794608200005, -71.96649321820001], [45.368644234700014, -71.96660135410002], [45.36847570779997, -71.96672254369997], [45.36847535330003, -71.9667227987], [45.36847277200002, -71.96672465490002], [45.36846661530001, -71.96672908229999], [45.368312798399984, -71.966839693], [45.368230035500005, -71.96689920799997], [45.36818523080001, -71.96693142710001], [45.36814964360002, -71.96695701789997], [45.3681407398, -71.9669634206], [45.3678581706, -71.9671666148], [45.3676915368, -71.9672864394], [45.3675249029, -71.9674062632], [45.3673614728, -71.9675237825], [45.3673582674, -71.9675260874], [45.3672704526, -71.967589233], [45.3672635843, -71.9675941718], [45.3672409457, -71.9676104506], [45.3672085195, -71.9676337674], [45.3671905735, -71.9676466719], [45.366772677100016, -71.9679471673], [45.366475745599985, -71.968160678], [45.36613066199999, -71.96840880949998], [45.36517550040003, -71.96909560220001], [45.36468868550003, -71.96944562509998], [45.364670778699974, -71.96989027709998], [45.36493635110003, -71.96969933129998], [45.36498894210001, -71.96966151829997], [45.3650415331, -71.96962370530002], [45.365120070700016, -71.9695672364], [45.36519652139998, -71.96951226779998], [45.36525441219999, -71.96947064390002], [45.365295588100025, -71.96944103800001], [45.3653794512, -71.96938073939998], [45.365772829499974, -71.96909789310001], [45.365789624800016, -71.96908581679997], [45.3661242778, -71.9688451916], [45.36755681490001, -71.9678151206], [45.36878169890002, -71.96693431749998]], "superficie": 15448.0}, {"no_lot": "6 477 749", "coords": [[45.3671905735, -71.9676466719], [45.3671909241, -71.9669427229], [45.36710934889999, -71.96696208869997], [45.36702432689998, -71.9670183151], [45.366977205599994, -71.96699686160002], [45.36694000279999, -71.96692929760002], [45.366919568000014, -71.96681508670002], [45.366936366000004, -71.96669653269998], [45.366935761399986, -71.96663395410002], [45.36692430789998, -71.96658777750002], [45.36688850579998, -71.96650334039998], [45.36686234170003, -71.9664452101], [45.36681235790002, -71.96634028900002], [45.36678532320002, -71.96626298389998], [45.366721778099986, -71.96610685130003], [45.36653933330001, -71.9661525642], [45.36651595469999, -71.96616078689999], [45.366772677100016, -71.9679471673], [45.3671905735, -71.9676466719]], "superficie": 5794.6}, {"no_lot": "6 477 745", "coords": [[45.3681280548, -71.9660644679], [45.3681407398, -71.9669634206], [45.36814964360002, -71.96695701789997], [45.36818523080001, -71.96693142710001], [45.368230035500005, -71.96689920799997], [45.368312798399984, -71.966839693], [45.368301755900006, -71.9660595254], [45.368281303900005, -71.96606010739998], [45.368279328100016, -71.96606016359999], [45.36826498800002, -71.9660605716], [45.3681280548, -71.9660644679]], "superficie": 1270.5}, {"no_lot": "6 477 748", "coords": [[45.3671909241, -71.9669427229], [45.3671913643, -71.9660435333], [45.36697533609998, -71.96604331999998], [45.366721778099986, -71.96610685130003], [45.36678532320002, -71.96626298389998], [45.36681235790002, -71.96634028900002], [45.36686234170003, -71.9664452101], [45.36688850579998, -71.96650334039998], [45.36692430789998, -71.96658777750002], [45.366935761399986, -71.96663395410002], [45.366936366000004, -71.96669653269998], [45.366919568000014, -71.96681508670002], [45.36694000279999, -71.96692929760002], [45.366977205599994, -71.96699686160002], [45.36702432689998, -71.9670183151], [45.36710934889999, -71.96696208869997], [45.3671909241, -71.9669427229]], "superficie": 2621.0}, {"no_lot": "1 468 534", "coords": [[45.364799243899995, -71.96669888550002], [45.3651129438, -71.96660523999998], [45.3653236344, -71.96654253029999], [45.36585018950001, -71.96638578149998], [45.36622323099999, -71.96626374329998], [45.366369593, -71.9662122652], [45.36637336810003, -71.96621093739998], [45.36637407019998, -71.96621069050002], [45.36637502140002, -71.96621035589999], [45.36639139549999, -71.96620459680003], [45.36641369490002, -71.96619675369999], [45.36651595469999, -71.96616078689999], [45.36653933330001, -71.9661525642], [45.366721778099986, -71.96610685130003], [45.36697533609998, -71.96604331999998], [45.3671913643, -71.9660435333], [45.3673488125, -71.9660436887], [45.3673833322, -71.9660448633], [45.3675478426, -71.9660504611], [45.3677123539, -71.966056059], [45.3678768651, -71.9660616569], [45.3680362451, -71.9660670803], [45.3681280548, -71.9660644679], [45.36826498800002, -71.9660605716], [45.368279328100016, -71.96606016359999], [45.368281303900005, -71.96606010739998], [45.368301755900006, -71.9660595254], [45.36831488299998, -71.96605915190003], [45.36846613289998, -71.96604754380002], [45.36864410700002, -71.9660338845], [45.36880842480002, -71.96602127329999], [45.368813300800014, -71.96586505049999], [45.368310823499996, -71.9659036187], [45.3680364616, -71.9659114285], [45.3676252299, -71.9658974978], [45.3673501713, -71.9658880683], [45.367213060200015, -71.9658879346], [45.36703472990001, -71.96588776470003], [45.36696576150001, -71.965887699], [45.366708381399974, -71.96595217980001], [45.36665093800002, -71.96596657769999], [45.36651757160001, -71.96599998699998], [45.366422049200025, -71.96603093990001], [45.36623489909999, -71.96609158000001], [45.366007636699976, -71.96616522559998], [45.365873990599994, -71.96620710320002], [45.36574010940001, -71.96624906519997], [45.365606219200004, -71.96629102420002], [45.365338894499985, -71.96637729209999], [45.3652060325, -71.966416955], [45.36507317960002, -71.96645661809998], [45.364938998900016, -71.9664966679], [45.364804818100026, -71.96653671749999], [45.364799243899995, -71.96669888550002]], "superficie": 5581.7}, {"no_lot": "1 468 282", "coords": [[45.368310823499996, -71.9659036187], [45.368813300800014, -71.96586505049999], [45.36883356279998, -71.96521598650003], [45.368820004300005, -71.96521404010002], [45.3688060897, -71.96521368079999], [45.36879214999999, -71.96521528940002], [45.36877474329998, -71.96521582410003], [45.368760790800025, -71.9652184167], [45.36874615480002, -71.96522000729999], [45.368731506100005, -71.96522258179999], [45.368717578899975, -71.96522320640003], [45.368703664400016, -71.9652228471], [45.368689736299984, -71.96522347170003], [45.36866121100002, -71.96522273509999], [45.36864728379999, -71.96522335970002], [45.368604147600024, -71.96522224580002], [45.3685492523, -71.96522629980001], [45.368535784400024, -71.96522346379999], [45.36849562079999, -71.9652076625], [45.36848176939998, -71.96520238340003], [45.368468600799986, -71.96519810500001], [45.368455444699975, -71.96519284390001], [45.368442275999996, -71.96518856670002], [45.36842844900002, -71.96518131969998], [45.36838757739997, -71.9651664845], [45.368332094200014, -71.96515127190003], [45.36827885150001, -71.96512877930002], [45.368265130700024, -71.965129376], [45.36825161910002, -71.96513162759999], [45.368238118600004, -71.9651330126], [45.36822401749998, -71.96513351530001], [45.368196404, -71.96513626960001], [45.36816697569998, -71.96513724210001], [45.36815347520002, -71.96513862709998], [45.36813933989998, -71.96514172939999], [45.368122776400014, -71.9651430353], [45.36804853709998, -71.96514978520003], [45.3680344462, -71.96514942139999], [45.368020355400006, -71.96514905750001], [45.3680050739, -71.9651513655], [45.3680364616, -71.9659114285], [45.368310823499996, -71.9659036187]], "superficie": 4978.7}, {"no_lot": "1 468 280", "coords": [[45.3673501713, -71.9658880683], [45.367329788, -71.965393167], [45.36727589140003, -71.96541265759998], [45.36724844219998, -71.96541781590003], [45.36723432550002, -71.9654186258], [45.36722100809999, -71.9654218014], [45.367207675600014, -71.96542615240003], [45.36719403910001, -71.96542783130002], [45.367213060200015, -71.9658879346], [45.3673501713, -71.9658880683]], "superficie": 570.3}]
-};
-</script>
-<script>
 
 document.addEventListener('DOMContentLoaded', function() {
 
 var MAP, WMS={}, WON={hydro:true,road:true,flood:true,mh:true};
-var ALot=null, ABnd=null, LPoly={};
+var ALot=null, ABnd=null, LotLayer, NbrLayer;
 var OWater=[], OBldg=[], OLayer;
-var MH=[], MHLayer, ETANCHE=false;
-var ZLayer, ZOn=true, STEP=0.000035;
-var tool='house', H=[], W=[], WP=[], WPC=[], GPS=null;
-var HW=40, HD=40, HC=0, WC=0;
+var MH=[], MHLayer;
 var resizing=false;
 var mapEl=document.getElementById('map');
+var CAD_URL='https://geo.environnement.gouv.qc.ca/donnees/rest/services/Reference/Cadastre_allege/MapServer/0/query';
 
 // RESIZER
 var sepEl=document.getElementById('sep');
@@ -878,7 +830,7 @@ window.tglPnl=function(){
 };
 
 // CARTE
-MAP=L.map('map',{zoomControl:true}).setView([GD.lat,GD.lng],18);
+MAP=L.map('map',{zoomControl:true}).setView([45.367605,-71.96657],16);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:21,attribution:'OSM'}).addTo(MAP);
 WMS={
   hydro:L.tileLayer.wms('https://servicescarto.mrnf.gouv.qc.ca/pes/services/Territoire/GRHQ_WMS/MapServer/WMSServer',{layers:'0,1,2,3,4,5,6,7,8,9',format:'image/png',transparent:true,opacity:.85,maxZoom:21}),
@@ -889,66 +841,92 @@ WMS={
 Object.keys(WMS).forEach(function(k){WMS[k].addTo(MAP);});
 OLayer=L.layerGroup().addTo(MAP);
 MHLayer=L.layerGroup().addTo(MAP);
-ZLayer=L.layerGroup().addTo(MAP);
+LotLayer=L.layerGroup().addTo(MAP);
+NbrLayer=L.layerGroup().addTo(MAP);
 
-// LOTS
-GD.c.forEach(function(l){
-  L.polygon(l.coords,{color:'#bbb',weight:1,fillColor:'#e8ddd0',fillOpacity:.4,interactive:false}).addTo(MAP);
-});
-var lsel=document.getElementById('lsel');
-var lbtns=document.getElementById('lbtns');
-GD.o.forEach(function(lot){
-  var main=lot.no_lot.trim()==='6 568 623';
-  var poly=L.polygon(lot.coords,{color:main?'#1a5fa8':'#777',weight:main?3:1.5,fillColor:main?'#1a5fa8':'#aaa',fillOpacity:.05}).addTo(MAP);
-  poly.on('click',function(e){L.DomEvent.stopPropagation(e);onClick(e.latlng.lat,e.latlng.lng);});
-  LPoly[lot.no_lot]=poly;
-  if(main)MAP.fitBounds(poly.getBounds(),{padding:[40,40]});
-  var opt=document.createElement('option');
-  opt.value=lot.no_lot;
-  opt.textContent='Lot '+lot.no_lot+' ('+lot.superficie+' m2)';
-  if(main)opt.selected=true;
-  lsel.appendChild(opt);
-  var btn=document.createElement('button');
-  btn.className='btn'+(main?' la':'');
-  btn.id='lb'+lot.no_lot.replace(/ /g,'_');
-  btn.textContent=lot.no_lot;
-  btn.onclick=(function(n){return function(){pickLot(n);};})(lot.no_lot);
-  lbtns.appendChild(btn);
-});
-lsel.addEventListener('change',function(){if(this.value)pickLot(this.value);});
-
-function pickLot(n){
-  ALot=GD.o.find(function(l){return l.no_lot.trim()===n.trim();});
-  if(!ALot)return;
-  document.getElementById('cl').textContent=ALot.no_lot;
-  document.getElementById('cs').textContent=ALot.superficie+' m2';
-  document.getElementById('lsel').value=ALot.no_lot;
-  GD.o.forEach(function(l){
-    var b=document.getElementById('lb'+l.no_lot.replace(/ /g,'_'));
-    if(b)b.className='btn'+(l.no_lot.trim()===n.trim()?' la':'');
-  });
-  var lats=ALot.coords.map(function(c){return c[0];});
-  var lngs=ALot.coords.map(function(c){return c[1];});
-  ABnd={sla:Math.min.apply(null,lats),nla:Math.max.apply(null,lats),wln:Math.min.apply(null,lngs),eln:Math.max.apply(null,lngs)};
-  MAP.fitBounds(LPoly[ALot.no_lot].getBounds(),{padding:[40,40]});
-  dZones();
+function setSb(txt,ok){
+  var el=document.getElementById('sb');
+  el.style.background=ok?'#e8f5e9':'#ffebee';
+  el.style.color=ok?'#1b5e20':'#b71c1c';
+  el.textContent=txt;
 }
-pickLot('6 568 623');
 
-// OSM
+// normalise "6568623" ou "6 568 623" -> "6 568 623"
+function normLot(v){
+  var digits=v.replace(/[^0-9]/g,'');
+  if(!digits)return v.trim();
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+}
+
+// RECHERCHE DE LOT (cadastre du Quebec - MRNF)
+window.searchLot=function(){
+  var v=document.getElementById('lotinput').value.trim();
+  if(!v){setSb('Entre un numero de lot',false);return;}
+  loadLot(v);
+};
+document.getElementById('lotinput').addEventListener('keydown',function(e){if(e.key==='Enter')window.searchLot();});
+
+function loadLot(noLotRaw){
+  var noLot=normLot(noLotRaw);
+  setSb('Recherche du lot '+noLot+'...',true);
+  var where="NO_LOT='"+noLot.replace(/'/g,"''")+"'";
+  var url=CAD_URL+'?f=geojson&outSR=4326&returnGeometry=true&outFields=NO_LOT&where='+encodeURIComponent(where);
+  fetch(url).then(function(r){return r.json();}).then(function(data){
+    if(!data.features||!data.features.length){setSb('Lot '+noLot+' introuvable au cadastre',false);return;}
+    var f=data.features[0];
+    var co=f.geometry.coordinates[0].map(function(c){return[c[1],c[0]];});
+    ALot={no_lot:f.properties.NO_LOT,coords:co};
+    var lats=co.map(function(c){return c[0];}),lngs=co.map(function(c){return c[1];});
+    ABnd={sla:Math.min.apply(null,lats),nla:Math.max.apply(null,lats),wln:Math.min.apply(null,lngs),eln:Math.max.apply(null,lngs)};
+    LotLayer.clearLayers();
+    var poly=L.polygon(co,{color:'#1a5fa8',weight:3,fillColor:'#1a5fa8',fillOpacity:.12}).addTo(LotLayer).bindPopup('Lot '+ALot.no_lot);
+    MAP.fitBounds(poly.getBounds(),{padding:[60,60]});
+    document.getElementById('cl').textContent=ALot.no_lot;
+    document.getElementById('lotinput').value=ALot.no_lot;
+    setSb('Lot '+ALot.no_lot+' charge',true);
+    loadNeighbors(f.geometry);
+    loadOSM();
+    loadMH();
+  }).catch(function(){setSb('Erreur de recherche - verifie ta connexion internet',false);});
+}
+
+function loadNeighbors(geom){
+  NbrLayer.clearLayers();
+  document.getElementById('cn').textContent='...';
+  var esriGeom=JSON.stringify({rings:geom.coordinates,spatialReference:{wkid:4326}});
+  var url=CAD_URL+'?f=geojson&outSR=4326&returnGeometry=true&outFields=NO_LOT'
+    +'&geometryType=esriGeometryPolygon&spatialRel=esriSpatialRelIntersects&inSR=4326'
+    +'&geometry='+encodeURIComponent(esriGeom);
+  fetch(url).then(function(r){return r.json();}).then(function(data){
+    var n=0;
+    (data.features||[]).forEach(function(f){
+      var nl=f.properties.NO_LOT;
+      if(nl===ALot.no_lot)return;
+      var co=f.geometry.coordinates[0].map(function(c){return[c[1],c[0]];});
+      var poly=L.polygon(co,{color:'#888',weight:1.5,fillColor:'#ccc',fillOpacity:.35}).addTo(NbrLayer);
+      poly.bindPopup('Lot '+nl+' (voisin)<br><span style="color:#1a5fa8">Clic pour le rechercher</span>');
+      poly.on('click',function(e){L.DomEvent.stopPropagation(e);loadLot(nl);});
+      n++;
+    });
+    document.getElementById('cn').textContent=n;
+  }).catch(function(){document.getElementById('cn').textContent='?';});
+}
+
+// OSM (cours eau, batiments)
 window.loadOSM=function(){
+  if(!ABnd)return;
   document.getElementById('dot').style.background='#ffb400';
   document.getElementById('otxt').textContent='Chargement OSM...';
-  var buf=0.012;
-  var s=GD.slat-buf,n=GD.nlat+buf,w=GD.wlng-buf,e=GD.elng+buf;
+  var buf=0.005;
+  var s=ABnd.sla-buf,n=ABnd.nla+buf,w=ABnd.wln-buf,e=ABnd.eln+buf;
   var q='[out:json][timeout:25];('
     +'way["waterway"="river"]('+s+','+w+','+n+','+e+');'
     +'way["waterway"="stream"]('+s+','+w+','+n+','+e+');'
     +'way["waterway"="canal"]('+s+','+w+','+n+','+e+');'
     +'way["natural"="water"]('+s+','+w+','+n+','+e+');'
     +'relation["natural"="water"]('+s+','+w+','+n+','+e+');'
-    +'way["building"]('+GD.slat+','+GD.wlng+','+GD.nlat+','+GD.elng+');'
-    +'node["addr:housenumber"]('+GD.slat+','+GD.wlng+','+GD.nlat+','+GD.elng+');'
+    +'way["building"]('+s+','+w+','+n+','+e+');'
+    +'node["addr:housenumber"]('+s+','+w+','+n+','+e+');'
     +');out body;>;out skel qt;';
   var ctrl=new AbortController(),tid=setTimeout(function(){ctrl.abort();},15000);
   fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(q),signal:ctrl.signal})
@@ -966,11 +944,9 @@ window.loadOSM=function(){
         if(co.length<2)return;
         var nm=t.name||t.waterway||'Eau';
         var isRiver=t.waterway==='river';
-        var isPoly=!t.waterway&&(t.natural==='water'||t.water);
-        var rHalf=isRiver?40:t.waterway==='canal'?5:2;
         L.polyline(co,{color:'#1565c0',weight:isRiver?5:3,opacity:.9}).addTo(OLayer)
           .bindPopup(nm+'<br>Min: 15m depuis le bord');
-        OWater.push({coords:co,name:nm,isPoly:isPoly,rHalf:isPoly?0:rHalf});
+        OWater.push({coords:co,name:nm});
         wc++;
       }
       if(el.type==='node'&&(t['addr:housenumber']||t.building)){
@@ -982,29 +958,26 @@ window.loadOSM=function(){
       if(el.type==='way'&&t.building){
         var co2=(el.nodes||[]).filter(function(id){return nd[id];}).map(function(id){return[nd[id].lat,nd[id].lon];});
         if(co2.length<3)return;
-        var clat2=co2.reduce(function(s,c){return s+c[0];},0)/co2.length;
-        var clng2=co2.reduce(function(s,c){return s+c[1];},0)/co2.length;
         L.polygon(co2,{color:'#e65100',weight:1.5,fillColor:'#ff8800',fillOpacity:.2}).addTo(OLayer).bindPopup('Batiment<br>Min: 5m');
-        OBldg.push({lat:clat2,lon:clng2,poly:co2});bc++;
+        OBldg.push({poly:co2});bc++;
       }
     });
     document.getElementById('dot').style.background='#2e7d32';
     document.getElementById('otxt').textContent='OSM: '+wc+' cours eau, '+bc+' batiments';
-    dZones();
   })
   .catch(function(){
     document.getElementById('dot').style.background='#c62828';
     document.getElementById('otxt').textContent='OSM non disponible';
   });
 };
-setTimeout(window.loadOSM,600);
 
 // MILIEUX HUMIDES (marais / etang - MELCCFP)
 window.loadMH=function(){
+  if(!ABnd)return;
   document.getElementById('mhdot').style.background='#ffb400';
   document.getElementById('mhtxt').textContent='Chargement MH...';
-  var buf=0.012;
-  var s=GD.slat-buf,n=GD.nlat+buf,w=GD.wlng-buf,e=GD.elng+buf;
+  var buf=0.005;
+  var s=ABnd.sla-buf,n=ABnd.nla+buf,w=ABnd.wln-buf,e=ABnd.eln+buf;
   var url='https://geo.environnement.gouv.qc.ca/donnees/rest/services/Biodiversite/MH_potentiels/MapServer/0/query'
     +'?f=geojson&outSR=4326&inSR=4326&geometryType=esriGeometryEnvelope'
     +'&geometry='+w+','+s+','+e+','+n
@@ -1025,242 +998,24 @@ window.loadMH=function(){
         var cls=(f.properties&&f.properties.CLASSE)||'Milieu humide';
         MH.push({coords:co,cls:cls});
         L.polygon(co,{color:'#00695c',weight:1.5,fillColor:'#26a69a',fillOpacity:.15,dashArray:'3,3'})
-          .addTo(MHLayer).bindPopup(cls+'<br>Min: '+(ETANCHE?10:15)+'m (art. '+(ETANCHE?'7.1':'7.2')+')');
+          .addTo(MHLayer).bindPopup(cls+'<br>Min: 10m (etanche, art.7.1) / 15m (non etanche, art.7.2)');
       });
     });
     document.getElementById('mhdot').style.background='#2e7d32';
     document.getElementById('mhtxt').textContent='MH: '+MH.length+' marais/etang';
-    dZones();updS();
   })
   .catch(function(){
     document.getElementById('mhdot').style.background='#c62828';
     document.getElementById('mhtxt').textContent='MH non disponible';
   });
 };
-setTimeout(window.loadMH,800);
 
-// GEOMETRIE
-function ftM(ft){return ft*0.3048;}
-function mkI(html,ax,ay){return L.divIcon({html:html,className:'',iconAnchor:[ax,ay]});}
-
-function hBnds(la,ln,w,d){
-  var wm=ftM(w),dm=ftM(d);
-  var dlat=dm/2/111320,dlng=wm/2/(111320*Math.cos(la*Math.PI/180));
-  return[[la-dlat,ln-dlng],[la+dlat,ln+dlng]];
-}
-
-function distSeg(la,ln,a,b){
-  var dla=b[0]-a[0],dln=b[1]-a[1];
-  var len2=dla*dla+dln*dln;
-  if(len2<1e-12)return MAP.distance(L.latLng(la,ln),L.latLng(a[0],a[1]));
-  var t=((la-a[0])*dla+(ln-a[1])*dln)/len2;
-  t=Math.max(0,Math.min(1,t));
-  return MAP.distance(L.latLng(la,ln),L.latLng(a[0]+t*dla,a[1]+t*dln));
-}
-
-function distRect(la,ln,h){
-  var b=hBnds(h.lat,h.lng,h.w,h.d);
-  var mn=b[0][0],mx=b[1][0],wn=b[0][1],wx=b[1][1];
-  if(la>=mn&&la<=mx&&ln>=wn&&ln<=wx)return 0;
-  var corners=[[mn,wn],[mn,wx],[mx,wn],[mx,wx]];
-  var segs=[[[mn,wn],[mn,wx]],[[mx,wn],[mx,wx]],[[mn,wn],[mx,wn]],[[mn,wx],[mx,wx]]];
-  var m=Infinity;
-  corners.forEach(function(c){var d=MAP.distance(L.latLng(la,ln),L.latLng(c[0],c[1]));if(d<m)m=d;});
-  segs.forEach(function(sg){var d=distSeg(la,ln,sg[0],sg[1]);if(d<m)m=d;});
-  return m;
-}
-
-function distPolyBorder(la,ln,poly){
-  var m=Infinity;
-  for(var i=0;i<poly.length;i++){
-    var j=(i+1)%poly.length;
-    var d=distSeg(la,ln,poly[i],poly[j]);
-    if(d<m)m=d;
-  }
-  return m;
-}
-
-function distWater(la,ln,w){
-  var m=Infinity;
-  var last=w.isPoly?w.coords.length:w.coords.length-1;
-  for(var i=0;i<last;i++){
-    var j=w.isPoly?(i+1)%w.coords.length:i+1;
-    var d=distSeg(la,ln,w.coords[i],w.coords[j]);
-    if(d<m)m=d;
-  }
-  // Pour ligne centrale: soustraire demi-largeur (bord reel)
-  if(!w.isPoly&&w.rHalf>0)m=Math.max(0,m-w.rHalf);
-  return m;
-}
-
-function distOsmBldg(la,ln,b){
-  if(b.poly)return distPolyBorder(la,ln,b.poly);
-  return MAP.distance(L.latLng(la,ln),L.latLng(b.lat,b.lon));
-}
-
-function ptInPoly(la,ln,poly){
-  var inside=false;
-  for(var i=0,j=poly.length-1;i<poly.length;j=i++){
-    var yi=poly[i][0],xi=poly[i][1],yj=poly[j][0],xj=poly[j][1];
-    var hit=((yi>la)!==(yj>la))&&(ln<(xj-xi)*(la-yi)/(yj-yi)+xi);
-    if(hit)inside=!inside;
-  }
-  return inside;
-}
-
-function distMH(la,ln,m){
-  if(ptInPoly(la,ln,m.coords))return 0;
-  return distPolyBorder(la,ln,m.coords);
-}
-
-// ZONES
-function zCol(la,ln){
-  var r=false,y=false;
-  H.forEach(function(h){var d=distRect(la,ln,h);if(d<5)r=true;else if(d<12)y=true;});
-  W.forEach(function(w){var d=MAP.distance(L.latLng(la,ln),w.mk.getLatLng());if(d<30)r=true;else if(d<38)y=true;});
-  OWater.forEach(function(w){var d=distWater(la,ln,w);if(d<15)r=true;else if(d<23)y=true;});
-  OBldg.forEach(function(b){var d=distOsmBldg(la,ln,b);if(d<5)r=true;else if(d<10)y=true;});
-  WP.forEach(function(w){var d=MAP.distance(L.latLng(la,ln),w.mk.getLatLng());if(d<15)r=true;else if(d<23)y=true;});
-  var mhLim=ETANCHE?10:15;
-  MH.forEach(function(m){var d=distMH(la,ln,m);if(d<mhLim)r=true;else if(d<mhLim+5)y=true;});
-  return r?'r':y?'y':'g';
-}
-
-function dZones(){
-  ZLayer.clearLayers();
-  if(!ZOn||!ABnd)return;
-  var b=ABnd;
-  for(var la=b.sla;la<b.nla;la+=STEP){
-    for(var ln=b.wln;ln<b.eln;ln+=STEP*1.3){
-      var c=zCol(la,ln),fc=c==='g'?'#1ea050':c==='y'?'#ffb400':'#d32f2f';
-      L.rectangle([[la,ln],[la+STEP,ln+STEP*1.3]],{color:'transparent',weight:0,fillColor:fc,fillOpacity:.45}).addTo(ZLayer);
-    }
-  }
-}
-window.tglZ=function(){ZOn=!ZOn;document.getElementById('btn-zones').className='btn'+(ZOn?' on':'');dZones();};
-
-// ELEMENTS
-function addH(la,ln){
-  HC++;var n=HC;
-  var rect=L.rectangle(hBnds(la,ln,HW,HD),{color:'#5d4037',weight:2,fillColor:'#8d6e63',fillOpacity:.4}).addTo(MAP);
-  var mk=L.marker([la,ln],{
-    icon:mkI('<div style="background:#5d4037;color:#fff;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700;border:2px solid #fff;cursor:grab;white-space:nowrap">M'+n+'</div>',20,12),
-    draggable:true
-  }).addTo(MAP);
-  var h={id:'h'+n,n:n,lat:la,lng:ln,rect:rect,mk:mk,w:HW,d:HD};
-  H.push(h);
-  mk.bindPopup('Maison M'+n+' - '+HW+'pi x '+HD+'pi');
-  mk.on('drag',function(e){var ll=e.target.getLatLng();h.lat=ll.lat;h.lng=ll.lng;rect.setBounds(hBnds(ll.lat,ll.lng,h.w,h.d));dZones();updS();});
-  dZones();updS();updL();
-}
-
-function addW(la,ln){
-  WC++;var n=WC;
-  var mk=L.marker([la,ln],{
-    icon:mkI('<div style="background:#37474f;color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:2px solid #fff;cursor:grab">P'+n+'</div>',13,13),
-    draggable:true
-  }).addTo(MAP);
-  var ci=L.circle([la,ln],{radius:30,color:'#c62828',fillColor:'#ef5350',fillOpacity:.1,weight:1.5,dashArray:'5,4'}).addTo(MAP);
-  var w={id:'w'+n,n:n,mk:mk,ci:ci};
-  W.push(w);
-  mk.bindPopup('Puits P'+n+' - 30m');
-  mk.on('drag',function(e){ci.setLatLng(e.target.getLatLng());dZones();updS();});
-  dZones();updS();updL();
-}
-
-function addWP(la,ln){
-  var n=WP.length+1;
-  var mk=L.marker([la,ln],{
-    icon:mkI('<div style="background:#0277bd;color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:2px solid #fff;cursor:grab">E'+n+'</div>',13,13),
-    draggable:true
-  }).addTo(MAP);
-  var ci=L.circle([la,ln],{radius:15,color:'#0288d1',fillColor:'#29b6f6',fillOpacity:.15,weight:2,dashArray:'5,4'}).addTo(MAP);
-  WP.push({mk:mk});WPC.push(ci);
-  mk.bindPopup('Bord eau E'+n+' - Min: 15m');
-  mk.on('drag',function(e){ci.setLatLng(e.target.getLatLng());dZones();updS();});
-  dZones();updS();updL();
-}
-
-function onClick(la,ln){
-  if(tool==='house')addH(la,ln);
-  else if(tool==='well')addW(la,ln);
-  else if(tool==='water')addWP(la,ln);
-  else if(tool==='gps'){
-    if(GPS)MAP.removeLayer(GPS);
-    GPS=L.marker([la,ln],{
-      icon:mkI('<div style="background:#1565c0;color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:2px solid #fff;cursor:grab">GPS</div>',14,14),
-      draggable:true
-    }).addTo(MAP);
-    GPS.on('drag',updS);updS();updL();
-  }
-}
-MAP.on('click',function(e){onClick(e.latlng.lat,e.latlng.lng);});
-
-function setSb(txt,ok){
-  var el=document.getElementById('sb');
-  el.style.background=ok?'#e8f5e9':'#ffebee';
-  el.style.color=ok?'#1b5e20':'#b71c1c';
-  el.textContent=txt;
-}
-
-function updS(){
-  if(!GPS){setSb('Place le GPS pour valider',true);return;}
-  var gll=GPS.getLatLng(),issue=null;
-  H.forEach(function(h){var d=Math.round(distRect(gll.lat,gll.lng,h));if(d<5)issue='Trop proche M'+h.n+' bord - '+d+'m (min 5m)';});
-  W.forEach(function(w){if(MAP.distance(gll,w.mk.getLatLng())<30)issue='Trop proche P'+w.n+' (min 30m)';});
-  OWater.forEach(function(w){if(distWater(gll.lat,gll.lng,w)<15)issue='Trop proche '+w.name+' bord (min 15m)';});
-  OBldg.forEach(function(b){if(distOsmBldg(gll.lat,gll.lng,b)<5)issue='Trop proche batiment (min 5m)';});
-  WP.forEach(function(w){if(MAP.distance(gll,w.mk.getLatLng())<15)issue='Trop proche bord eau (min 15m)';});
-  var mhLim=ETANCHE?10:15;
-  MH.forEach(function(m){if(distMH(gll.lat,gll.lng,m)<mhLim)issue='Trop proche '+m.cls+' (min '+mhLim+'m, art. '+(ETANCHE?'7.1':'7.2')+')';});
-  if(issue){setSb('NON CONFORME: '+issue,false);}
-  else{
-    var nd=1e9;
-    H.forEach(function(h){var d=distRect(gll.lat,gll.lng,h);if(d<nd)nd=d;});
-    setSb('CONFORME'+(nd<1e9?' - '+Math.round(nd)+'m du bord maison':'')+' | Test possible',true);
-  }
-}
-
-function updL(){
-  var tot=H.length+W.length+WP.length+(GPS?1:0);
-  document.getElementById('ec').textContent='('+tot+')';
-  var el=document.getElementById('elist');
-  if(!tot){el.innerHTML='<span style="color:#bbb;font-size:12px">Aucun element</span>';return;}
-  var html='';
-  H.forEach(function(h){html+='<div class="eli"><span>M'+h.n+' ('+h.w+'x'+h.d+'pi)</span><button class="del" onclick="window.delH(\''+h.id+'\')">X</button></div>';});
-  W.forEach(function(w){html+='<div class="eli"><span>P'+w.n+' (30m)</span><button class="del" onclick="window.delW(\''+w.id+'\')">X</button></div>';});
-  WP.forEach(function(w,i){html+='<div class="eli"><span>Bord eau E'+(i+1)+'</span><button class="del" onclick="window.delWP('+i+')">X</button></div>';});
-  if(GPS)html+='<div class="eli"><span>GPS</span><button class="del" onclick="window.delGPS()">X</button></div>';
-  el.innerHTML=html;
-}
-
-window.delH=function(id){var i=H.findIndex(function(h){return h.id===id;});if(i<0)return;MAP.removeLayer(H[i].rect);MAP.removeLayer(H[i].mk);H.splice(i,1);dZones();updS();updL();};
-window.delW=function(id){var i=W.findIndex(function(w){return w.id===id;});if(i<0)return;MAP.removeLayer(W[i].mk);MAP.removeLayer(W[i].ci);W.splice(i,1);dZones();updS();updL();};
-window.delWP=function(i){if(i<0||i>=WP.length)return;MAP.removeLayer(WP[i].mk);MAP.removeLayer(WPC[i]);WP.splice(i,1);WPC.splice(i,1);dZones();updS();updL();};
-window.delGPS=function(){if(GPS){MAP.removeLayer(GPS);GPS=null;}updS();updL();};
-window.updHS=function(){HW=parseInt(document.getElementById('hw').value);HD=parseInt(document.getElementById('hd').value);document.getElementById('hwv').textContent=HW+' pi';document.getElementById('hdv').textContent=HD+' pi';document.getElementById('ha').textContent=(HW*HD)+' pi2';};
-window.setT=function(t){tool=t;['house','well','water','gps'].forEach(function(id){document.getElementById('tool-'+id).className='btn'+(id===t?' sel':'');});};
-window.setSys=function(t){
-  ETANCHE=(t==='etanche');
-  document.getElementById('sys-etanche').className='btn'+(ETANCHE?' sel':'');
-  document.getElementById('sys-nonetanche').className='btn'+(!ETANCHE?' sel':'');
-  document.getElementById('mhlim').textContent=(ETANCHE?10:15)+' m du bord';
-  dZones();updS();
-};
 window.tglL=function(n){if(WON[n]){MAP.removeLayer(WMS[n]);WON[n]=false;document.getElementById('btn-'+n).className='btn';}else{WMS[n].addTo(MAP);WON[n]=true;document.getElementById('btn-'+n).className='btn on';}};
-window.clrAll=function(){
-  H.forEach(function(h){MAP.removeLayer(h.rect);MAP.removeLayer(h.mk);});
-  W.forEach(function(w){MAP.removeLayer(w.mk);MAP.removeLayer(w.ci);});
-  WP.forEach(function(w){MAP.removeLayer(w.mk);});WPC.forEach(function(c){MAP.removeLayer(c);});
-  if(GPS)MAP.removeLayer(GPS);
-  H=[];W=[];WP=[];WPC=[];GPS=null;HC=0;WC=0;
-  ZLayer.clearLayers();setSb('Selectionne un lot et un outil',true);updL();
-};
-window.rezoom=function(){if(ALot&&LPoly[ALot.no_lot])MAP.fitBounds(LPoly[ALot.no_lot].getBounds(),{padding:[40,40]});};
-window.locMe=function(){MAP.locate({setView:true,maxZoom:19});MAP.on('locationfound',function(e){L.marker(e.latlng).addTo(MAP).bindPopup('Vous etes ici').openPopup();});MAP.on('locationerror',function(){alert('GPS non disponible');});};
+window.rezoom=function(){if(LotLayer.getLayers().length)MAP.fitBounds(LotLayer.getLayers()[0].getBounds(),{padding:[60,60]});};
 
 }); // DOMContentLoaded
 
 </script>
+
 </body>
 </html>
