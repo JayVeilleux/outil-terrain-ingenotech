@@ -733,8 +733,11 @@ td:last-child{text-align:right;font-weight:500}
   <span id="otxt">OSM: en attente</span>
   <div id="mhdot" style="width:7px;height:7px;border-radius:50%;background:#aaa;flex-shrink:0;margin-left:8px"></div>
   <span id="mhtxt">MH: en attente</span>
+  <div id="welldot" style="width:7px;height:7px;border-radius:50%;background:#aaa;flex-shrink:0;margin-left:8px"></div>
+  <span id="welltxt">Puits: en attente</span>
   <button class="btn" onclick="loadOSM()" style="margin-left:auto;padding:2px 7px;font-size:10px">Recharger OSM</button>
   <button class="btn" onclick="loadMH()" style="padding:2px 7px;font-size:10px">Recharger MH</button>
+  <button class="btn" onclick="loadWells()" style="padding:2px 7px;font-size:10px">Recharger puits</button>
 </div>
 <div id="sb">Entrez un numero de lot pour commencer</div>
 <div id="sep"><div id="sep-inner"></div></div>
@@ -775,6 +778,7 @@ td:last-child{text-align:right;font-weight:500}
 <div class="lg"><div class="ld" style="background:#1565c0;height:3px;border-radius:2px"></div>Cours eau OSM (detecte)</div>
 <div class="lg"><div class="ld" style="background:#e65100;border-radius:50%"></div>Batiment existant (OSM)</div>
 <div class="lg"><div class="ld" style="background:#26a69a;border:1px dashed #00695c"></div>Marais/etang detecte (precis, MELCCFP)</div>
+<div class="lg"><div class="ld" style="background:#5e35b1;border-radius:50%"></div>Puits/forage (SIH - MELCCFP)</div>
 <div class="lg"><div class="ld" style="background:#4fa8e0"></div>Cours eau - couche gouv. (GRHQ)</div>
 <div class="lg"><div class="ld" style="background:#e0665a"></div>Routes - couche gouv. (AQreseau)</div>
 <div class="lg"><div class="ld" style="background:repeating-linear-gradient(45deg,#e53935,#e53935 2px,#fff 2px,#fff 5px);border:1px solid #c62828"></div>Zone inondable (MRNF)</div>
@@ -799,6 +803,7 @@ var MAP, WMS={}, WON={hydro:true,road:true,flood:true,mh:true,mhduc:false,contou
 var ALot=null, ABnd=null, LotLayer, NbrLayer;
 var OWater=[], OBldg=[], OLayer;
 var MH=[], MHLayer;
+var WELLS=[], WellLayer;
 var resizing=false;
 var mapEl=document.getElementById('map');
 var CAD_URL='https://geo.environnement.gouv.qc.ca/donnees/rest/services/Reference/Cadastre_allege/MapServer/0/query';
@@ -863,6 +868,7 @@ WMS={
 Object.keys(WMS).forEach(function(k){if(WON[k])WMS[k].addTo(MAP);});
 OLayer=L.layerGroup().addTo(MAP);
 MHLayer=L.layerGroup().addTo(MAP);
+WellLayer=L.layerGroup().addTo(MAP);
 LotLayer=L.layerGroup().addTo(MAP);
 NbrLayer=L.layerGroup().addTo(MAP);
 
@@ -913,6 +919,7 @@ function loadLot(noLotRaw){
     loadNeighbors();
     loadOSM();
     loadMH();
+    loadWells();
   }).catch(function(){searching=false;setSb('Erreur de recherche - verifie ta connexion internet',false);});
 }
 
@@ -1041,6 +1048,43 @@ window.loadMH=function(){
   });
 };
 
+// PUITS ET FORAGES (SIH - MELCCFP)
+window.loadWells=function(){
+  if(!ABnd)return;
+  document.getElementById('welldot').style.background='#ffb400';
+  document.getElementById('welltxt').textContent='Chargement puits...';
+  var buf=0.005;
+  var s=ABnd.sla-buf,n=ABnd.nla+buf,w=ABnd.wln-buf,e=ABnd.eln+buf;
+  var url='https://www.servicesgeo.enviroweb.gouv.qc.ca/donnees/rest/services/Public/Themes_publics/MapServer/78/query'
+    +'?f=geojson&outSR=4326&inSR=4326&geometryType=esriGeometryEnvelope'
+    +'&geometry='+w+','+s+','+e+','+n
+    +'&spatialRel=esriSpatialRelIntersects'
+    +'&outFields=CLE_PUITS,PROFOND_PUITS,DATE_FORAGE,NO_LOT_CADAST&returnGeometry=true';
+  var ctrl=new AbortController(),tid=setTimeout(function(){ctrl.abort();},15000);
+  fetch(url,{signal:ctrl.signal})
+  .then(function(r){clearTimeout(tid);return r.json();})
+  .then(function(data){
+    WellLayer.clearLayers();WELLS=[];
+    (data.features||[]).forEach(function(f){
+      var g=f.geometry;if(!g)return;
+      var la=g.coordinates[1],ln=g.coordinates[0];
+      var p=f.properties||{};
+      WELLS.push({lat:la,lng:ln});
+      var prof=p.PROFOND_PUITS?Math.round(p.PROFOND_PUITS*10)/10+' m':'inconnue';
+      var date=p.DATE_FORAGE?p.DATE_FORAGE.substring(0,10):'inconnue';
+      var lot=p.NO_LOT_CADAST?'<br>Lot: '+p.NO_LOT_CADAST:'';
+      L.circleMarker([la,ln],{radius:6,color:'#4527a0',fillColor:'#5e35b1',fillOpacity:.85,weight:2})
+        .addTo(WellLayer).bindPopup('Puits/forage'+lot+'<br>Profondeur: '+prof+'<br>Fore le: '+date+'<br>Min: 30m');
+    });
+    document.getElementById('welldot').style.background='#2e7d32';
+    document.getElementById('welltxt').textContent='Puits: '+WELLS.length+' trouves';
+  })
+  .catch(function(){
+    document.getElementById('welldot').style.background='#c62828';
+    document.getElementById('welltxt').textContent='Puits non disponible';
+  });
+};
+
 window.tglL=function(n){if(WON[n]){MAP.removeLayer(WMS[n]);WON[n]=false;document.getElementById('btn-'+n).className='btn';}else{WMS[n].addTo(MAP);WON[n]=true;document.getElementById('btn-'+n).className='btn on';}};
 window.rezoom=function(){if(LotLayer.getLayers().length)MAP.fitBounds(LotLayer.getLayers()[0].getBounds(),{padding:[60,60]});};
 
@@ -1052,6 +1096,7 @@ function buildCapLegend(){
   if(OWater.length)items.push({sw:'background:#1565c0;height:3px;border-radius:2px',label:'Cours eau OSM (detecte)'});
   if(OBldg.length)items.push({sw:'background:#e65100;border-radius:50%',label:'Batiment existant (OSM)'});
   if(MH.length)items.push({sw:'background:#26a69a;border:1px dashed #00695c',label:'Marais/etang detecte (precis, MELCCFP)'});
+  if(WELLS.length)items.push({sw:'background:#5e35b1;border-radius:50%',label:WELLS.length+' puits/forage (SIH - MELCCFP)'});
   if(WON.hydro)items.push({sw:'background:#4fa8e0',label:'Cours eau - couche gouv. (GRHQ)'});
   if(WON.road)items.push({sw:'background:#e0665a',label:'Routes - couche gouv. (AQreseau)'});
   if(WON.flood)items.push({sw:'background:repeating-linear-gradient(45deg,#e53935,#e53935 2px,#fff 2px,#fff 5px);border:1px solid #c62828',label:'Zone inondable (MRNF)'});
