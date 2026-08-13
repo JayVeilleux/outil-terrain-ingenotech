@@ -719,7 +719,10 @@ td:last-child{text-align:right;font-weight:500}
 <div id="osmbar">
   <div id="dot"></div>
   <span id="otxt">OSM: en attente</span>
+  <div id="mhdot" style="width:7px;height:7px;border-radius:50%;background:#aaa;flex-shrink:0;margin-left:8px"></div>
+  <span id="mhtxt">MH: en attente</span>
   <button class="btn" onclick="loadOSM()" style="margin-left:auto;padding:2px 7px;font-size:10px">Recharger OSM</button>
+  <button class="btn" onclick="loadMH()" style="padding:2px 7px;font-size:10px">Recharger MH</button>
 </div>
 <div id="sb">Selectionne un lot puis un outil</div>
 <div id="sep"><div id="sep-inner"></div></div>
@@ -753,6 +756,14 @@ td:last-child{text-align:right;font-weight:500}
 <div class="lg"><div class="ld" style="background:#e65100;border-radius:50%"></div>Batiment existant (5m)</div>
 <div class="lg"><div class="ld" style="background:#5d4037"></div>Maison future (5m depuis bord)</div>
 <div class="lg"><div class="ld" style="background:#37474f;border-radius:50%"></div>Puits (30m)</div>
+<div class="lg"><div class="ld" style="background:#26a69a;border:1px dashed #00695c"></div>Marais/etang detecte (10-15m selon systeme)</div>
+</div>
+<div class="s">
+<div class="st">Type de systeme septique</div>
+<div class="row">
+  <button class="btn" id="sys-etanche" onclick="setSys('etanche')">Etanche - art. 7.1 (10m)</button>
+  <button class="btn sel" id="sys-nonetanche" onclick="setSys('nonetanche')">Non etanche - art. 7.2 (15m)</button>
+</div>
 </div>
 <div class="s">
 <div class="st">Dimensions maison</div>
@@ -786,6 +797,7 @@ td:last-child{text-align:right;font-weight:500}
 <tr><td>Puits voisin</td><td>30 m</td></tr>
 <tr><td>Residence (du bord)</td><td>5 m</td></tr>
 <tr><td>Limite de propriete</td><td>2 m</td></tr>
+<tr><td>Marais / etang (art. 7.1/7.2)</td><td id="mhlim">15 m du bord</td></tr>
 <tr><td>Zone inondable</td><td style="color:#c62828">Interdit</td></tr>
 </table>
 </div>
@@ -817,6 +829,7 @@ document.addEventListener('DOMContentLoaded', function() {
 var MAP, WMS={}, WON={hydro:true,road:true,flood:true,mh:true};
 var ALot=null, ABnd=null, LPoly={};
 var OWater=[], OBldg=[], OLayer;
+var MH=[], MHLayer, ETANCHE=false;
 var ZLayer, ZOn=true, STEP=0.000035;
 var tool='house', H=[], W=[], WP=[], WPC=[], GPS=null;
 var HW=40, HD=40, HC=0, WC=0;
@@ -875,6 +888,7 @@ WMS={
 };
 Object.keys(WMS).forEach(function(k){WMS[k].addTo(MAP);});
 OLayer=L.layerGroup().addTo(MAP);
+MHLayer=L.layerGroup().addTo(MAP);
 ZLayer=L.layerGroup().addTo(MAP);
 
 // LOTS
@@ -985,6 +999,46 @@ window.loadOSM=function(){
 };
 setTimeout(window.loadOSM,600);
 
+// MILIEUX HUMIDES (marais / etang - MELCCFP)
+window.loadMH=function(){
+  document.getElementById('mhdot').style.background='#ffb400';
+  document.getElementById('mhtxt').textContent='Chargement MH...';
+  var buf=0.012;
+  var s=GD.slat-buf,n=GD.nlat+buf,w=GD.wlng-buf,e=GD.elng+buf;
+  var url='https://geo.environnement.gouv.qc.ca/donnees/rest/services/Biodiversite/MH_potentiels/MapServer/0/query'
+    +'?f=geojson&outSR=4326&inSR=4326&geometryType=esriGeometryEnvelope'
+    +'&geometry='+w+','+s+','+e+','+n
+    +'&spatialRel=esriSpatialRelIntersects'
+    +'&where='+encodeURIComponent("CLASSE IN ('Marais','Eau peu profonde')")
+    +'&outFields=CLASSE&returnGeometry=true';
+  var ctrl=new AbortController(),tid=setTimeout(function(){ctrl.abort();},15000);
+  fetch(url,{signal:ctrl.signal})
+  .then(function(r){clearTimeout(tid);return r.json();})
+  .then(function(data){
+    MHLayer.clearLayers();MH=[];
+    (data.features||[]).forEach(function(f){
+      var g=f.geometry;if(!g)return;
+      var polys=g.type==='Polygon'?[g.coordinates]:g.type==='MultiPolygon'?g.coordinates:[];
+      polys.forEach(function(rings){
+        var outer=rings[0];if(!outer||outer.length<3)return;
+        var co=outer.map(function(c){return[c[1],c[0]];});
+        var cls=(f.properties&&f.properties.CLASSE)||'Milieu humide';
+        MH.push({coords:co,cls:cls});
+        L.polygon(co,{color:'#00695c',weight:1.5,fillColor:'#26a69a',fillOpacity:.15,dashArray:'3,3'})
+          .addTo(MHLayer).bindPopup(cls+'<br>Min: '+(ETANCHE?10:15)+'m (art. '+(ETANCHE?'7.1':'7.2')+')');
+      });
+    });
+    document.getElementById('mhdot').style.background='#2e7d32';
+    document.getElementById('mhtxt').textContent='MH: '+MH.length+' marais/etang';
+    dZones();updS();
+  })
+  .catch(function(){
+    document.getElementById('mhdot').style.background='#c62828';
+    document.getElementById('mhtxt').textContent='MH non disponible';
+  });
+};
+setTimeout(window.loadMH,800);
+
 // GEOMETRIE
 function ftM(ft){return ft*0.3048;}
 function mkI(html,ax,ay){return L.divIcon({html:html,className:'',iconAnchor:[ax,ay]});}
@@ -1044,6 +1098,21 @@ function distOsmBldg(la,ln,b){
   return MAP.distance(L.latLng(la,ln),L.latLng(b.lat,b.lon));
 }
 
+function ptInPoly(la,ln,poly){
+  var inside=false;
+  for(var i=0,j=poly.length-1;i<poly.length;j=i++){
+    var yi=poly[i][0],xi=poly[i][1],yj=poly[j][0],xj=poly[j][1];
+    var hit=((yi>la)!==(yj>la))&&(ln<(xj-xi)*(la-yi)/(yj-yi)+xi);
+    if(hit)inside=!inside;
+  }
+  return inside;
+}
+
+function distMH(la,ln,m){
+  if(ptInPoly(la,ln,m.coords))return 0;
+  return distPolyBorder(la,ln,m.coords);
+}
+
 // ZONES
 function zCol(la,ln){
   var r=false,y=false;
@@ -1052,6 +1121,8 @@ function zCol(la,ln){
   OWater.forEach(function(w){var d=distWater(la,ln,w);if(d<15)r=true;else if(d<23)y=true;});
   OBldg.forEach(function(b){var d=distOsmBldg(la,ln,b);if(d<5)r=true;else if(d<10)y=true;});
   WP.forEach(function(w){var d=MAP.distance(L.latLng(la,ln),w.mk.getLatLng());if(d<15)r=true;else if(d<23)y=true;});
+  var mhLim=ETANCHE?10:15;
+  MH.forEach(function(m){var d=distMH(la,ln,m);if(d<mhLim)r=true;else if(d<mhLim+5)y=true;});
   return r?'r':y?'y':'g';
 }
 
@@ -1140,6 +1211,8 @@ function updS(){
   OWater.forEach(function(w){if(distWater(gll.lat,gll.lng,w)<15)issue='Trop proche '+w.name+' bord (min 15m)';});
   OBldg.forEach(function(b){if(distOsmBldg(gll.lat,gll.lng,b)<5)issue='Trop proche batiment (min 5m)';});
   WP.forEach(function(w){if(MAP.distance(gll,w.mk.getLatLng())<15)issue='Trop proche bord eau (min 15m)';});
+  var mhLim=ETANCHE?10:15;
+  MH.forEach(function(m){if(distMH(gll.lat,gll.lng,m)<mhLim)issue='Trop proche '+m.cls+' (min '+mhLim+'m, art. '+(ETANCHE?'7.1':'7.2')+')';});
   if(issue){setSb('NON CONFORME: '+issue,false);}
   else{
     var nd=1e9;
@@ -1167,6 +1240,13 @@ window.delWP=function(i){if(i<0||i>=WP.length)return;MAP.removeLayer(WP[i].mk);M
 window.delGPS=function(){if(GPS){MAP.removeLayer(GPS);GPS=null;}updS();updL();};
 window.updHS=function(){HW=parseInt(document.getElementById('hw').value);HD=parseInt(document.getElementById('hd').value);document.getElementById('hwv').textContent=HW+' pi';document.getElementById('hdv').textContent=HD+' pi';document.getElementById('ha').textContent=(HW*HD)+' pi2';};
 window.setT=function(t){tool=t;['house','well','water','gps'].forEach(function(id){document.getElementById('tool-'+id).className='btn'+(id===t?' sel':'');});};
+window.setSys=function(t){
+  ETANCHE=(t==='etanche');
+  document.getElementById('sys-etanche').className='btn'+(ETANCHE?' sel':'');
+  document.getElementById('sys-nonetanche').className='btn'+(!ETANCHE?' sel':'');
+  document.getElementById('mhlim').textContent=(ETANCHE?10:15)+' m du bord';
+  dZones();updS();
+};
 window.tglL=function(n){if(WON[n]){MAP.removeLayer(WMS[n]);WON[n]=false;document.getElementById('btn-'+n).className='btn';}else{WMS[n].addTo(MAP);WON[n]=true;document.getElementById('btn-'+n).className='btn on';}};
 window.clrAll=function(){
   H.forEach(function(h){MAP.removeLayer(h.rect);MAP.removeLayer(h.mk);});
