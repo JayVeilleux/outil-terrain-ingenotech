@@ -704,6 +704,10 @@ select{width:100%;font-size:12px;padding:6px 8px;border-radius:6px;border:1px so
 table{width:100%;font-size:12px;border-collapse:collapse}
 td{padding:3px 0;color:#555;border-bottom:1px solid #eee}
 td:last-child{text-align:right;font-weight:500}
+.lot-label{background:transparent;border:none;box-shadow:none;padding:0;font-size:11px;font-weight:700;color:#1a5fa8;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 0 3px #fff}
+.lot-label:before{display:none}
+.lot-label-nbr{background:transparent;border:none;box-shadow:none;padding:0;font-size:10px;font-weight:600;color:#555;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 0 3px #fff}
+.lot-label-nbr:before{display:none}
 
 </style>
 </head>
@@ -883,6 +887,7 @@ function loadLot(noLotRaw){
     ABnd={sla:Math.min.apply(null,lats),nla:Math.max.apply(null,lats),wln:Math.min.apply(null,lngs),eln:Math.max.apply(null,lngs)};
     LotLayer.clearLayers();
     var poly=L.polygon(co,{color:'#1a5fa8',weight:3,fillColor:'#1a5fa8',fillOpacity:.12}).addTo(LotLayer).bindPopup('Lot '+ALot.no_lot);
+    poly.bindTooltip(ALot.no_lot,{permanent:true,direction:'center',className:'lot-label'});
     MAP.fitBounds(poly.getBounds(),{padding:[60,60]});
     document.getElementById('cl').textContent=ALot.no_lot;
     document.getElementById('lotinput').value=ALot.no_lot;
@@ -908,6 +913,7 @@ function loadNeighbors(geom){
       var co=f.geometry.coordinates[0].map(function(c){return[c[1],c[0]];});
       var poly=L.polygon(co,{color:'#888',weight:1.5,fillColor:'#ccc',fillOpacity:.35}).addTo(NbrLayer);
       poly.bindPopup('Lot '+nl+' (voisin)<br><span style="color:#1a5fa8">Clic pour le rechercher</span>');
+      poly.bindTooltip(nl,{permanent:true,direction:'center',className:'lot-label-nbr'});
       poly.on('click',function(e){L.DomEvent.stopPropagation(e);loadLot(nl);});
       n++;
     });
