@@ -745,6 +745,7 @@ td:last-child{text-align:right;font-weight:500}
   <button class="btn on" id="btn-road" onclick="tglL('road')">Routes</button>
   <button class="btn on" id="btn-flood" onclick="tglL('flood')">Inondations</button>
   <button class="btn on" id="btn-mh" onclick="tglL('mh')">Milieux humides</button>
+  <button class="btn" id="btn-contour" onclick="tglL('contour')">Courbes 1m</button>
 </div>
 </div>
 <div class="s">
@@ -754,6 +755,7 @@ td:last-child{text-align:right;font-weight:500}
 <div class="lg"><div class="ld" style="background:#1565c0;height:3px;border-radius:2px"></div>Cours eau OSM</div>
 <div class="lg"><div class="ld" style="background:#e65100;border-radius:50%"></div>Batiment existant</div>
 <div class="lg"><div class="ld" style="background:#26a69a;border:1px dashed #00695c"></div>Marais/etang detecte</div>
+<div class="lg"><div class="ld" style="background:#e8a97d"></div>Courbes de niveau (1m, LiDAR MRNF)</div>
 </div>
 <div class="s">
 <div class="st">Q-2 r.22 - Distances minimales</div>
@@ -780,7 +782,7 @@ td:last-child{text-align:right;font-weight:500}
 
 document.addEventListener('DOMContentLoaded', function() {
 
-var MAP, WMS={}, WON={hydro:true,road:true,flood:true,mh:true};
+var MAP, WMS={}, WON={hydro:true,road:true,flood:true,mh:true,contour:false};
 var ALot=null, ABnd=null, LotLayer, NbrLayer;
 var OWater=[], OBldg=[], OLayer;
 var MH=[], MHLayer;
@@ -836,9 +838,10 @@ WMS={
   hydro:L.tileLayer.wms('https://servicescarto.mrnf.gouv.qc.ca/pes/services/Territoire/GRHQ_WMS/MapServer/WMSServer',{layers:'0,1,2,3,4,5,6,7,8,9',format:'image/png',transparent:true,opacity:.85,maxZoom:21}),
   road:L.tileLayer.wms('https://servicescarto.mrnf.gouv.qc.ca/pes/services/Territoire/AQreseau_WMS/MapServer/WMSServer',{layers:'0,1,2,3,4,5',format:'image/png',transparent:true,opacity:.7,maxZoom:21}),
   flood:L.tileLayer.wms('https://servicesvecto3.mern.gouv.qc.ca/geoserver/GrilleInfoZI_Pub/wms',{layers:'GrilleInfoZI_Pub',format:'image/png',transparent:true,opacity:.5,maxZoom:21}),
-  mh:L.tileLayer.wms('https://geo.environnement.gouv.qc.ca/donnees/services/Biodiversite/MH_potentiels/MapServer/WMSServer',{layers:'Milieux_humides_potentiels11904',format:'image/png',transparent:true,opacity:.6,maxZoom:21})
+  mh:L.tileLayer.wms('https://geo.environnement.gouv.qc.ca/donnees/services/Biodiversite/MH_potentiels/MapServer/WMSServer',{layers:'Milieux_humides_potentiels11904',format:'image/png',transparent:true,opacity:.6,maxZoom:21}),
+  contour:L.tileLayer.wms('https://geoegl.msp.gouv.qc.ca/ws/mffpecofor.fcgi',{layers:'courbes_niveau_1m',format:'image/png',transparent:true,opacity:.8,maxZoom:21})
 };
-Object.keys(WMS).forEach(function(k){WMS[k].addTo(MAP);});
+Object.keys(WMS).forEach(function(k){if(WON[k])WMS[k].addTo(MAP);});
 OLayer=L.layerGroup().addTo(MAP);
 MHLayer=L.layerGroup().addTo(MAP);
 LotLayer=L.layerGroup().addTo(MAP);
