@@ -888,12 +888,15 @@ window.searchLot=function(){
 };
 document.getElementById('lotinput').addEventListener('keydown',function(e){if(e.key==='Enter')window.searchLot();});
 
+var searching=false;
 function loadLot(noLotRaw){
   var noLot=normLot(noLotRaw);
+  searching=true;
   setSb('Recherche du lot '+noLot+'...',true);
   var where="NO_LOT='"+noLot.replace(/'/g,"''")+"'";
   var url=CAD_URL+'?f=geojson&outSR=4326&returnGeometry=true&outFields=NO_LOT&where='+encodeURIComponent(where);
   fetch(url).then(function(r){return r.json();}).then(function(data){
+    searching=false;
     if(!data.features||!data.features.length){setSb('Lot '+noLot+' introuvable au cadastre',false);return;}
     var f=data.features[0];
     var co=f.geometry.coordinates[0].map(function(c){return[c[1],c[0]];});
@@ -910,7 +913,7 @@ function loadLot(noLotRaw){
     loadNeighbors();
     loadOSM();
     loadMH();
-  }).catch(function(){setSb('Erreur de recherche - verifie ta connexion internet',false);});
+  }).catch(function(){searching=false;setSb('Erreur de recherche - verifie ta connexion internet',false);});
 }
 
 var NBR_BUF_M=100;
@@ -933,7 +936,7 @@ function loadNeighbors(){
       var poly=L.polygon(co,{color:'#888',weight:1.5,fillColor:'#ccc',fillOpacity:.35}).addTo(NbrLayer);
       poly.bindPopup('Lot '+nl+' (voisin)<br><span style="color:#1a5fa8">Clic pour le rechercher</span>');
       poly.bindTooltip(nl,{permanent:true,direction:'center',className:'lot-label-nbr'});
-      poly.on('click',function(e){L.DomEvent.stopPropagation(e);loadLot(nl);});
+      poly.on('click',function(e){L.DomEvent.stopPropagation(e);if(captureMode)return;loadLot(nl);});
       n++;
     });
     document.getElementById('cn').textContent=n;
@@ -1060,7 +1063,24 @@ function buildCapLegend(){
   html+='</div><div class="cb-foot">Genere via Outil terrain Ingenotech - '+new Date().toLocaleDateString('fr-CA')+'</div>';
   document.getElementById('capbar').innerHTML=html;
 }
+var CAP_W_M=250,CAP_H_M=200;
+function frameLot(availW,availH){
+  var ratio=CAP_W_M/CAP_H_M;
+  var w=availW,h=w/ratio;
+  if(h>availH){h=availH;w=h*ratio;}
+  mapEl.style.width=w+'px';
+  mapEl.style.height=h+'px';
+  mapEl.style.margin='0 auto';
+  MAP.invalidateSize();
+  if(!LotLayer.getLayers().length)return;
+  var c=LotLayer.getLayers()[0].getBounds().getCenter();
+  var bufLat=(CAP_H_M/2)/111320;
+  var bufLng=(CAP_W_M/2)/(111320*Math.cos(c.lat*Math.PI/180));
+  MAP.fitBounds([[c.lat-bufLat,c.lng-bufLng],[c.lat+bufLat,c.lng+bufLng]],{padding:[0,0]});
+}
 window.tglCapture=function(){
+  if(!captureMode&&searching){setSb('Patiente - recherche en cours...',false);return;}
+  if(!captureMode&&!ALot){setSb('Recherche un lot avant de capturer',false);return;}
   captureMode=!captureMode;
   var pnl=document.getElementById('pnl'),sep=document.getElementById('sep'),
       osmbar=document.getElementById('osmbar'),sb=document.getElementById('sb'),
@@ -1076,7 +1096,7 @@ window.tglCapture=function(){
     if(MAP.tap)MAP.tap.disable();
     MAP.zoomControl.remove();
     btn.textContent='Reprendre';btn.className='btn sel';
-    mapEl.style.height=(window.innerHeight-hdrH-capbar.offsetHeight)+'px';
+    frameLot(window.innerWidth,window.innerHeight-hdrH-capbar.offsetHeight);
   } else {
     capbar.style.display='none';
     pnl.style.display='';sep.style.display='';osmbar.style.display='';sb.style.display='';
@@ -1085,6 +1105,7 @@ window.tglCapture=function(){
     if(MAP.tap)MAP.tap.enable();
     MAP.zoomControl.addTo(MAP);
     btn.textContent='Capturer';btn.className='btn';
+    mapEl.style.width='';mapEl.style.margin='';
     mapEl.style.height='55vh';
   }
   MAP.invalidateSize();
