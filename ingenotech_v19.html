@@ -680,6 +680,12 @@ body{display:flex;flex-direction:column;height:100vh;overflow:hidden;background:
 #sep:hover{background:#aaa}
 #sep-inner{width:32px;height:2px;background:#999;border-radius:1px;pointer-events:none}
 #pnl{flex:1;overflow-y:auto;background:#fff}
+#capbar{display:none;flex:1;flex-direction:column;background:#fff;border-top:2px solid #1a5fa8;padding:10px 16px;overflow-y:auto}
+#capbar .cb-title{font-size:13px;font-weight:700;color:#1a5fa8;margin-bottom:8px}
+#capbar .cb-legend{display:flex;flex-wrap:wrap;gap:10px 18px}
+#capbar .cb-item{display:flex;align-items:center;gap:6px;font-size:11px;color:#333}
+#capbar .cb-sw{width:14px;height:14px;border-radius:3px;flex-shrink:0}
+#capbar .cb-foot{margin-top:8px;font-size:10px;color:#999}
 .ctrl{padding:10px 14px}
 .s{margin-bottom:12px}
 .st{font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
@@ -717,9 +723,11 @@ td:last-child{text-align:right;font-weight:500}
   <div style="display:flex;gap:5px">
     <button class="btn" onclick="tglPnl()" style="padding:4px 8px;font-size:11px">Panneau</button>
     <button class="btn" onclick="rezoom()" style="padding:4px 8px;font-size:11px">Recentrer</button>
+    <button class="btn" id="btn-capture" onclick="tglCapture()" style="padding:4px 8px;font-size:11px">Capturer</button>
   </div>
 </div>
 <div id="map"></div>
+<div id="capbar"></div>
 <div id="osmbar">
   <div id="dot"></div>
   <span id="otxt">OSM: en attente</span>
@@ -1032,6 +1040,55 @@ window.loadMH=function(){
 
 window.tglL=function(n){if(WON[n]){MAP.removeLayer(WMS[n]);WON[n]=false;document.getElementById('btn-'+n).className='btn';}else{WMS[n].addTo(MAP);WON[n]=true;document.getElementById('btn-'+n).className='btn on';}};
 window.rezoom=function(){if(LotLayer.getLayers().length)MAP.fitBounds(LotLayer.getLayers()[0].getBounds(),{padding:[60,60]});};
+
+var captureMode=false;
+function buildCapLegend(){
+  var items=[];
+  items.push({sw:'background:#1a5fa8',label:'Lot '+(ALot?ALot.no_lot:'-')});
+  if(NbrLayer.getLayers().length)items.push({sw:'background:#aaa',label:NbrLayer.getLayers().length+' lots voisins (100m)'});
+  if(OWater.length)items.push({sw:'background:#1565c0;height:3px;border-radius:2px',label:'Cours eau OSM (detecte)'});
+  if(OBldg.length)items.push({sw:'background:#e65100;border-radius:50%',label:'Batiment existant (OSM)'});
+  if(MH.length)items.push({sw:'background:#26a69a;border:1px dashed #00695c',label:'Marais/etang detecte (precis, MELCCFP)'});
+  if(WON.hydro)items.push({sw:'background:#4fa8e0',label:'Cours eau - couche gouv. (GRHQ)'});
+  if(WON.road)items.push({sw:'background:#e0665a',label:'Routes - couche gouv. (AQreseau)'});
+  if(WON.flood)items.push({sw:'background:repeating-linear-gradient(45deg,#e53935,#e53935 2px,#fff 2px,#fff 5px);border:1px solid #c62828',label:'Zone inondable (MRNF)'});
+  if(WON.mh)items.push({sw:'background:#7cb342',label:'Milieux humides - Quebec (MELCCFP)'});
+  if(WON.mhduc)items.push({sw:'background:#2e7d32',label:'Milieux humides - Canards Illimites'});
+  if(WON.contour)items.push({sw:'background:#e8a97d',label:'Courbes de niveau (1m, LiDAR MRNF)'});
+  var html='<div class="cb-title">Legende</div><div class="cb-legend">';
+  items.forEach(function(it){html+='<div class="cb-item"><div class="cb-sw" style="'+it.sw+'"></div>'+it.label+'</div>';});
+  html+='</div><div class="cb-foot">Genere via Outil terrain Ingenotech - '+new Date().toLocaleDateString('fr-CA')+'</div>';
+  document.getElementById('capbar').innerHTML=html;
+}
+window.tglCapture=function(){
+  captureMode=!captureMode;
+  var pnl=document.getElementById('pnl'),sep=document.getElementById('sep'),
+      osmbar=document.getElementById('osmbar'),sb=document.getElementById('sb'),
+      capbar=document.getElementById('capbar'),btn=document.getElementById('btn-capture'),
+      hdrH=document.getElementById('hdr').offsetHeight;
+  if(captureMode){
+    buildCapLegend();
+    pnl.style.display='none';sep.style.display='none';
+    osmbar.style.display='none';sb.style.display='none';
+    capbar.style.display='flex';
+    MAP.dragging.disable();MAP.scrollWheelZoom.disable();MAP.doubleClickZoom.disable();
+    MAP.touchZoom.disable();MAP.boxZoom.disable();
+    if(MAP.tap)MAP.tap.disable();
+    MAP.zoomControl.remove();
+    btn.textContent='Reprendre';btn.className='btn sel';
+    mapEl.style.height=(window.innerHeight-hdrH-capbar.offsetHeight)+'px';
+  } else {
+    capbar.style.display='none';
+    pnl.style.display='';sep.style.display='';osmbar.style.display='';sb.style.display='';
+    MAP.dragging.enable();MAP.scrollWheelZoom.enable();MAP.doubleClickZoom.enable();
+    MAP.touchZoom.enable();MAP.boxZoom.enable();
+    if(MAP.tap)MAP.tap.enable();
+    MAP.zoomControl.addTo(MAP);
+    btn.textContent='Capturer';btn.className='btn';
+    mapEl.style.height='55vh';
+  }
+  MAP.invalidateSize();
+};
 
 }); // DOMContentLoaded
 
