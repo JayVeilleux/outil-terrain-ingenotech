@@ -755,7 +755,8 @@ td:last-child{text-align:right;font-weight:500}
   <button class="btn on" id="btn-hydro" onclick="tglL('hydro')">Cours eau</button>
   <button class="btn on" id="btn-road" onclick="tglL('road')">Routes</button>
   <button class="btn on" id="btn-flood" onclick="tglL('flood')">Inondations</button>
-  <button class="btn on" id="btn-mh" onclick="tglL('mh')">Milieux humides</button>
+  <button class="btn on" id="btn-mh" onclick="tglL('mh')">MH - Quebec (MELCCFP)</button>
+  <button class="btn" id="btn-mhduc" onclick="tglL('mhduc')">MH - Canards Illimites</button>
   <button class="btn" id="btn-contour" onclick="tglL('contour')">Courbes 1m</button>
 </div>
 </div>
@@ -781,7 +782,7 @@ td:last-child{text-align:right;font-weight:500}
 
 document.addEventListener('DOMContentLoaded', function() {
 
-var MAP, WMS={}, WON={hydro:true,road:true,flood:true,mh:true,contour:false};
+var MAP, WMS={}, WON={hydro:true,road:true,flood:true,mh:true,mhduc:false,contour:false};
 var ALot=null, ABnd=null, LotLayer, NbrLayer;
 var OWater=[], OBldg=[], OLayer;
 var MH=[], MHLayer;
@@ -843,6 +844,7 @@ WMS={
   road:L.tileLayer.wms('https://servicescarto.mrnf.gouv.qc.ca/pes/services/Territoire/AQreseau_WMS/MapServer/WMSServer',{layers:'0,1,2,3,4,5',format:'image/png',transparent:true,opacity:.7,maxZoom:21}),
   flood:L.tileLayer.wms('https://servicesvecto3.mern.gouv.qc.ca/geoserver/GrilleInfoZI_Pub/wms',{layers:'GrilleInfoZI_Pub',format:'image/png',transparent:true,opacity:.5,maxZoom:21}),
   mh:L.tileLayer.wms('https://geo.environnement.gouv.qc.ca/donnees/services/Biodiversite/MH_potentiels/MapServer/WMSServer',{layers:'Milieux_humides_potentiels11904',format:'image/png',transparent:true,opacity:.6,maxZoom:21}),
+  mhduc:L.tileLayer.wms('https://maps.ducks.ca/arcgis/services/Public/QC_Carto_MH_sudqc_2022/MapServer/WMSServer',{layers:'0',format:'image/png',transparent:true,opacity:.6,maxZoom:21}),
   contour:L.tileLayer.wms('https://geoegl.msp.gouv.qc.ca/ws/mffpecofor.fcgi',{layers:'courbes_niveau_1m',format:'image/png',transparent:true,opacity:.8,maxZoom:21})
 };
 Object.keys(WMS).forEach(function(k){if(WON[k])WMS[k].addTo(MAP);});
