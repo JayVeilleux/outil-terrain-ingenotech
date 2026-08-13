@@ -743,6 +743,13 @@ td:last-child{text-align:right;font-weight:500}
   <div class="card"><div class="l">Lots voisins (100m)</div><div class="v" id="cn">-</div></div>
 </div>
 <div class="s">
+<div class="st">Fond de carte</div>
+<div class="row">
+  <button class="btn on" id="base-street" onclick="setBase('street')">Plan</button>
+  <button class="btn" id="base-sat" onclick="setBase('sat')">Satellite</button>
+</div>
+</div>
+<div class="s">
 <div class="st">Couches</div>
 <div class="row">
   <button class="btn on" id="btn-hydro" onclick="tglL('hydro')">Cours eau</button>
@@ -837,7 +844,12 @@ window.tglPnl=function(){
 
 // CARTE
 MAP=L.map('map',{zoomControl:true}).setView([45.367605,-71.96657],16);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:21,attribution:'OSM'}).addTo(MAP);
+var baseStreet=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:21,attribution:'OSM'}).addTo(MAP);
+var baseSat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:21,attribution:'Esri'});
+window.setBase=function(t){
+  if(t==='sat'){MAP.removeLayer(baseStreet);baseSat.addTo(MAP).bringToBack();document.getElementById('base-street').className='btn';document.getElementById('base-sat').className='btn on';}
+  else{MAP.removeLayer(baseSat);baseStreet.addTo(MAP).bringToBack();document.getElementById('base-street').className='btn on';document.getElementById('base-sat').className='btn';}
+};
 WMS={
   hydro:L.tileLayer.wms('https://servicescarto.mrnf.gouv.qc.ca/pes/services/Territoire/GRHQ_WMS/MapServer/WMSServer',{layers:'0,1,2,3,4,5,6,7,8,9',format:'image/png',transparent:true,opacity:.85,maxZoom:21}),
   road:L.tileLayer.wms('https://servicescarto.mrnf.gouv.qc.ca/pes/services/Territoire/AQreseau_WMS/MapServer/WMSServer',{layers:'0,1,2,3,4,5',format:'image/png',transparent:true,opacity:.7,maxZoom:21}),
