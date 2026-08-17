@@ -697,6 +697,8 @@ body{background:#eee}
 .btn.on{background:#1a5fa8;color:#fff;border-color:#1a5fa8}
 .btn.sel{background:#2e7d32;color:#fff;border-color:#2e7d32}
 .btn.tiny{padding:1px 7px;font-size:11px;margin-left:auto}
+.btn.capzoom{width:30px;height:30px;padding:0;font-size:17px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center}
+.capsize{flex:1;text-align:center;font-size:11px;color:#666;align-self:center}
 .lg{display:flex;align-items:center;gap:7px;margin-bottom:7px;font-size:11px;color:#555}
 .lg:last-child{margin-bottom:0}
 .ld{width:14px;height:14px;border-radius:3px;flex-shrink:0}
@@ -755,6 +757,11 @@ body.capture-active .fp-chrome{display:none}
   </div>
   <div class="row">
     <button class="btn" id="btn-capture" onclick="tglCapture()">Capturer</button>
+  </div>
+  <div class="row" id="capZoomRow" style="display:none">
+    <button class="btn capzoom" onclick="capZoom(-1)" title="Retrecir le cadrage">-</button>
+    <span id="capSizeLabel" class="capsize"></span>
+    <button class="btn capzoom" onclick="capZoom(1)" title="Agrandir le cadrage">+</button>
   </div>
 </div>
 
@@ -1150,6 +1157,16 @@ function frameLot(availW,totalAvailH){
   var bufLng=(CAP_W_M/2)/(111320*Math.cos(c.lat*Math.PI/180));
   MAP.fitBounds([[c.lat-bufLat,c.lng-bufLng],[c.lat+bufLat,c.lng+bufLng]],{padding:[0,0]});
 }
+var CAP_RATIO=CAP_W_M/CAP_H_M;
+window.capZoom=function(dir){
+  if(!captureMode)return;
+  var w=CAP_W_M*(dir>0?1.25:0.8);
+  w=Math.max(80,Math.min(2000,w));
+  CAP_W_M=Math.round(w);
+  CAP_H_M=Math.round(CAP_W_M/CAP_RATIO);
+  document.getElementById('capSizeLabel').textContent=CAP_W_M+' x '+CAP_H_M+' m';
+  frameLot(window.innerWidth,window.innerHeight);
+};
 window.tglCapture=function(){
   if(!captureMode&&searching){setSb('Patiente - recherche en cours...',false);return;}
   if(!captureMode&&!ALot){setSb('Recherche un lot avant de capturer',false);return;}
@@ -1159,6 +1176,8 @@ window.tglCapture=function(){
     buildCapLegend();
     document.body.classList.add('capture-active');
     capbar.style.display='flex';
+    document.getElementById('capZoomRow').style.display='flex';
+    document.getElementById('capSizeLabel').textContent=CAP_W_M+' x '+CAP_H_M+' m';
     MAP.dragging.disable();MAP.scrollWheelZoom.disable();MAP.doubleClickZoom.disable();
     MAP.touchZoom.disable();MAP.boxZoom.disable();
     if(MAP.tap)MAP.tap.disable();
@@ -1167,6 +1186,7 @@ window.tglCapture=function(){
     frameLot(window.innerWidth,window.innerHeight);
   } else {
     capbar.style.display='none';
+    document.getElementById('capZoomRow').style.display='none';
     document.body.classList.remove('capture-active');
     MAP.dragging.enable();MAP.scrollWheelZoom.enable();MAP.doubleClickZoom.enable();
     MAP.touchZoom.enable();MAP.boxZoom.enable();
