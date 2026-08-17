@@ -715,6 +715,8 @@ td:last-child{text-align:right;font-weight:500}
 .lot-label:before{display:none}
 .lot-label-nbr{background:transparent;border:none;box-shadow:none;padding:0;font-size:10px;font-weight:600;color:#555;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 0 3px #fff}
 .lot-label-nbr:before{display:none}
+.measure-label{background:#ad1457;border:none;box-shadow:0 1px 3px rgba(0,0,0,.35);padding:3px 8px;font-size:12px;font-weight:700;color:#fff;border-radius:4px}
+.measure-label:before{display:none}
 
 </style>
 </head>
@@ -724,6 +726,7 @@ td:last-child{text-align:right;font-weight:500}
   <div style="display:flex;gap:5px">
     <button class="btn" onclick="tglPnl()" style="padding:4px 8px;font-size:11px">Panneau</button>
     <button class="btn" onclick="rezoom()" style="padding:4px 8px;font-size:11px">Recentrer</button>
+    <button class="btn" id="btn-measure" onclick="tglMeasure()" style="padding:4px 8px;font-size:11px">Mesurer</button>
     <button class="btn" id="btn-capture" onclick="tglCapture()" style="padding:4px 8px;font-size:11px">Capturer</button>
   </div>
 </div>
@@ -807,6 +810,7 @@ var ALot=null, ABnd=null, LotLayer, NbrLayer;
 var OWater=[], OBldg=[], OLayer;
 var MH=[], MHLayer;
 var WELLS=[], WellLayer;
+var measuring=false, measurePts=[], MeasureLayer;
 var resizing=false;
 var mapEl=document.getElementById('map');
 var CAD_URL='https://geo.environnement.gouv.qc.ca/donnees/rest/services/Reference/Cadastre_allege/MapServer/0/query';
@@ -873,6 +877,7 @@ Object.keys(WMS).forEach(function(k){if(WON[k])WMS[k].addTo(MAP);});
 OLayer=L.layerGroup().addTo(MAP);
 MHLayer=L.layerGroup().addTo(MAP);
 WellLayer=L.layerGroup().addTo(MAP);
+MeasureLayer=L.layerGroup().addTo(MAP);
 LotLayer=L.layerGroup().addTo(MAP);
 NbrLayer=L.layerGroup().addTo(MAP);
 
@@ -947,7 +952,7 @@ function loadNeighbors(){
       var poly=L.polygon(co,{color:'#888',weight:1.5,fillOpacity:0}).addTo(NbrLayer);
       poly.bindPopup('Lot '+nl+' (voisin)<br><span style="color:#1a5fa8">Clic pour le rechercher</span>');
       poly.bindTooltip(nl,{permanent:true,direction:'center',className:'lot-label-nbr'});
-      poly.on('click',function(e){L.DomEvent.stopPropagation(e);if(captureMode)return;loadLot(nl);});
+      poly.on('click',function(e){if(measuring)return;L.DomEvent.stopPropagation(e);if(captureMode)return;loadLot(nl);});
       n++;
     });
     document.getElementById('cn').textContent=n;
@@ -1093,6 +1098,43 @@ window.loadWells=function(){
 
 window.tglL=function(n){if(WON[n]){MAP.removeLayer(WMS[n]);WON[n]=false;document.getElementById('btn-'+n).className='btn';}else{WMS[n].addTo(MAP);WON[n]=true;document.getElementById('btn-'+n).className='btn on';}};
 window.rezoom=function(){if(LotLayer.getLayers().length)MAP.fitBounds(LotLayer.getLayers()[0].getBounds(),{padding:[60,60]});};
+
+window.tglMeasure=function(){
+  measuring=!measuring;
+  var btn=document.getElementById('btn-measure');
+  measurePts=[];
+  MeasureLayer.clearLayers();
+  if(measuring){
+    btn.textContent='Mesurer: clic 1er point';
+    btn.className='btn sel';
+    setSb('Clique un premier point sur la carte',true);
+  } else {
+    btn.textContent='Mesurer';
+    btn.className='btn';
+  }
+};
+MAP.getContainer().addEventListener('click',function(domEvt){
+  if(!measuring||captureMode)return;
+  domEvt.stopPropagation();
+  var latlng=MAP.mouseEventToLatLng(domEvt);
+  if(measurePts.length>=2){measurePts=[];MeasureLayer.clearLayers();}
+  measurePts.push(latlng);
+  MeasureLayer.clearLayers();
+  measurePts.forEach(function(p){
+    L.circleMarker(p,{radius:5,color:'#ad1457',fillColor:'#ec407a',fillOpacity:1,weight:2}).addTo(MeasureLayer);
+  });
+  if(measurePts.length===2){
+    var d=MAP.distance(measurePts[0],measurePts[1]);
+    var txt=d<1000?(Math.round(d*10)/10)+' m':(Math.round(d/100)/10)+' km';
+    L.polyline(measurePts,{color:'#ad1457',weight:3,dashArray:'7,6'})
+      .addTo(MeasureLayer)
+      .bindTooltip(txt,{permanent:true,direction:'center',className:'measure-label'});
+    document.getElementById('btn-measure').textContent='Mesurer: '+txt;
+    setSb('Distance mesuree: '+txt+' - clique pour recommencer',true);
+  } else {
+    setSb('Clique un 2e point pour mesurer',true);
+  }
+},true);
 
 var captureMode=false;
 function buildCapLegend(){
