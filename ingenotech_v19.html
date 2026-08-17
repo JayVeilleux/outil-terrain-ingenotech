@@ -717,7 +717,7 @@ body{background:#eee}
 .measure-label{background:#ad1457;border:none;box-shadow:0 1px 3px rgba(0,0,0,.35);padding:3px 8px;font-size:12px;font-weight:700;color:#fff;border-radius:4px}
 .measure-label:before{display:none}
 .hydro-tiles{filter:saturate(1.6) brightness(.8) contrast(1.15)}
-.well-label{display:none;background:#fff;border:1px solid #4527a0;box-shadow:none;padding:1px 5px;font-size:10px;font-weight:700;color:#4527a0;border-radius:3px}
+.well-label{display:none;background:transparent;border:none;box-shadow:none;padding:0;font-size:10.5px;font-weight:700;color:#4527a0;line-height:1.25;text-align:center;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 0 3px #fff}
 .well-label:before{display:none}
 
 body.capture-active .fp-chrome{display:none}
@@ -1071,7 +1071,11 @@ window.loadWells=function(){
         .addTo(WellLayer).bindPopup('Zone de protection - 30m');
       var wellMk=L.circleMarker([la,ln],{radius:6,color:'#4527a0',fillColor:'#5e35b1',fillOpacity:.85,weight:2})
         .addTo(WellLayer).bindPopup('Puits/forage'+lot+'<br>Profondeur: '+prof+'<br>Fore le: '+date+'<br>Min: 30m');
-      if(p.PROFOND_PUITS)wellMk.bindTooltip(prof,{permanent:true,direction:'top',offset:[0,-6],className:'well-label'});
+      var labelBits=[];
+      if(p.PROFOND_PUITS)labelBits.push(prof);
+      if(p.DATE_FORAGE)labelBits.push(date);
+      var labelHtml='Puits/forage'+(labelBits.length?'<br>'+labelBits.join(' - '):'');
+      wellMk.bindTooltip(labelHtml,{permanent:true,direction:'top',offset:[0,-8],className:'well-label'});
     });
     document.getElementById('welldot').style.background='#2e7d32';
     document.getElementById('welltxt').textContent='Puits: '+WELLS.length+' trouves';
