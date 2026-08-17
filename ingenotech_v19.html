@@ -759,9 +759,9 @@ body.capture-active .fp-chrome{display:none}
     <button class="btn" id="btn-capture" onclick="tglCapture()">Capturer</button>
   </div>
   <div class="row" id="capZoomRow" style="display:none">
-    <button class="btn capzoom" onclick="capZoom(-1)" title="Retrecir le cadrage">-</button>
+    <button class="btn capzoom" onclick="capZoom(-1)" title="Dezoomer (voir plus large)">-</button>
     <span id="capSizeLabel" class="capsize"></span>
-    <button class="btn capzoom" onclick="capZoom(1)" title="Agrandir le cadrage">+</button>
+    <button class="btn capzoom" onclick="capZoom(1)" title="Zoomer (agrandir l'image)">+</button>
   </div>
 </div>
 
@@ -828,7 +828,7 @@ window.tglFloat=function(which){
 };
 
 // CARTE
-MAP=L.map('map',{zoomControl:false}).setView([45.367605,-71.96657],16);
+MAP=L.map('map',{zoomControl:false,zoomSnap:0}).setView([45.367605,-71.96657],16);
 MAP.zoomControl=L.control.zoom({position:'bottomright'}).addTo(MAP);
 var baseStreet=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:21,attribution:'OSM'}).addTo(MAP);
 var baseSat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:21,attribution:'Esri'});
@@ -1155,12 +1155,12 @@ function frameLot(availW,totalAvailH){
   var c=LotLayer.getLayers()[0].getBounds().getCenter();
   var bufLat=(CAP_H_M/2)/111320;
   var bufLng=(CAP_W_M/2)/(111320*Math.cos(c.lat*Math.PI/180));
-  MAP.fitBounds([[c.lat-bufLat,c.lng-bufLng],[c.lat+bufLat,c.lng+bufLng]],{padding:[0,0]});
+  MAP.fitBounds([[c.lat-bufLat,c.lng-bufLng],[c.lat+bufLat,c.lng+bufLng]],{padding:[0,0],animate:false});
 }
 var CAP_RATIO=CAP_W_M/CAP_H_M;
 window.capZoom=function(dir){
   if(!captureMode)return;
-  var w=CAP_W_M*(dir>0?1.25:0.8);
+  var w=CAP_W_M*(dir>0?0.8:1.25);
   w=Math.max(80,Math.min(2000,w));
   CAP_W_M=Math.round(w);
   CAP_H_M=Math.round(CAP_W_M/CAP_RATIO);
