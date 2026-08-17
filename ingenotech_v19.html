@@ -744,14 +744,16 @@ body.capture-active .fp-chrome{display:none}
   <div id="sb" class="fp-status">Entrez un numero de lot pour commencer</div>
 </div>
 
-<div class="floatpanel fp-topright fp-chrome">
-  <div class="row seg">
+<div class="floatpanel fp-topright">
+  <div class="row seg fp-chrome">
     <button class="btn on" id="base-street" onclick="setBase('street')">Plan</button>
     <button class="btn" id="base-sat" onclick="setBase('sat')">Satellite</button>
   </div>
-  <div class="row">
+  <div class="row fp-chrome">
     <button class="btn" onclick="rezoom()">Recentrer</button>
     <button class="btn" id="btn-measure" onclick="tglMeasure()">Mesurer</button>
+  </div>
+  <div class="row">
     <button class="btn" id="btn-capture" onclick="tglCapture()">Capturer</button>
   </div>
 </div>
