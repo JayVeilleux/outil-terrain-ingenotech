@@ -711,6 +711,7 @@ table{width:100%;font-size:12px;border-collapse:collapse}
 td{padding:3px 0;color:#555;border-bottom:1px solid #eee}
 td:last-child{text-align:right;font-weight:500}
 .lot-label{background:transparent;border:none;box-shadow:none;padding:0;font-size:11px;font-weight:700;color:#1a5fa8;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 0 3px #fff}
+.hydro-tiles{filter:saturate(1.6) brightness(.8) contrast(1.15)}
 .lot-label:before{display:none}
 .lot-label-nbr{background:transparent;border:none;box-shadow:none;padding:0;font-size:10px;font-weight:600;color:#555;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 0 3px #fff}
 .lot-label-nbr:before{display:none}
@@ -775,11 +776,11 @@ td:last-child{text-align:right;font-weight:500}
 <div class="st">Legende</div>
 <div class="lg"><div class="ld" style="background:transparent;border:2px solid #1a5fa8"></div>Lot recherche</div>
 <div class="lg"><div class="ld" style="background:transparent;border:2px solid #888"></div>Lot voisin (clic pour changer)</div>
-<div class="lg"><div class="ld" style="background:#1565c0;height:3px;border-radius:2px"></div>Cours eau OSM (detecte)</div>
+<div class="lg"><div class="ld" style="background:#0a3d8f;height:3px;border-radius:2px"></div>Cours eau OSM (detecte)</div>
 <div class="lg"><div class="ld" style="background:#e65100;border-radius:50%"></div>Batiment existant (OSM)</div>
 <div class="lg"><div class="ld" style="background:#26a69a;border:1px dashed #00695c"></div>Marais/etang detecte (precis, MELCCFP)</div>
 <div class="lg"><div class="ld" style="background:#5e35b1;border-radius:50%"></div>Puits/forage (SIH - MELCCFP)</div>
-<div class="lg"><div class="ld" style="background:#4fa8e0"></div>Cours eau - couche gouv. (GRHQ)</div>
+<div class="lg"><div class="ld" style="background:#1a6fc4"></div>Cours eau - couche gouv. (GRHQ)</div>
 <div class="lg"><div class="ld" style="background:#e0665a"></div>Routes - couche gouv. (AQreseau)</div>
 <div class="lg"><div class="ld" style="background:repeating-linear-gradient(45deg,#e53935,#e53935 2px,#fff 2px,#fff 5px);border:1px solid #c62828"></div>Zone inondable (MRNF)</div>
 <div class="lg"><div class="ld" style="background:#7cb342"></div>Milieux humides - Quebec (MELCCFP)</div>
@@ -858,7 +859,7 @@ window.setBase=function(t){
   else{MAP.removeLayer(baseSat);baseStreet.addTo(MAP).bringToBack();document.getElementById('base-street').className='btn on';document.getElementById('base-sat').className='btn';}
 };
 WMS={
-  hydro:L.tileLayer.wms('https://servicescarto.mrnf.gouv.qc.ca/pes/services/Territoire/GRHQ_WMS/MapServer/WMSServer',{layers:'0,1,2,3,4,5,6,7,8,9',format:'image/png',transparent:true,opacity:.85,maxZoom:21}),
+  hydro:L.tileLayer.wms('https://servicescarto.mrnf.gouv.qc.ca/pes/services/Territoire/GRHQ_WMS/MapServer/WMSServer',{layers:'0,1,2,3,4,5,6,7,8,9',format:'image/png',transparent:true,opacity:.95,maxZoom:21,className:'hydro-tiles'}),
   road:L.tileLayer.wms('https://servicescarto.mrnf.gouv.qc.ca/pes/services/Territoire/AQreseau_WMS/MapServer/WMSServer',{layers:'0,1,2,3,4,5',format:'image/png',transparent:true,opacity:.7,maxZoom:21}),
   flood:L.tileLayer.wms('https://servicesvecto3.mern.gouv.qc.ca/geoserver/GrilleInfoZI_Pub/wms',{layers:'GrilleInfoZI',format:'image/png',transparent:true,opacity:.5,maxZoom:21}),
   mh:L.tileLayer.wms('https://geo.environnement.gouv.qc.ca/donnees/services/Biodiversite/MH_potentiels/MapServer/WMSServer',{layers:'Milieux_humides_potentiels11904',format:'image/png',transparent:true,opacity:.6,maxZoom:21}),
@@ -982,7 +983,7 @@ window.loadOSM=function(){
         if(co.length<2)return;
         var nm=t.name||t.waterway||'Eau';
         var isRiver=t.waterway==='river';
-        L.polyline(co,{color:'#1565c0',weight:isRiver?5:3,opacity:.9}).addTo(OLayer)
+        L.polyline(co,{color:'#0a3d8f',weight:isRiver?5:4,opacity:1}).addTo(OLayer)
           .bindPopup(nm+'<br>Min: 15m depuis le bord');
         OWater.push({coords:co,name:nm});
         wc++;
@@ -1093,11 +1094,11 @@ function buildCapLegend(){
   var items=[];
   items.push({sw:'background:transparent;border:2px solid #1a5fa8',label:'Lot '+(ALot?ALot.no_lot:'-')});
   if(NbrLayer.getLayers().length)items.push({sw:'background:transparent;border:2px solid #888',label:NbrLayer.getLayers().length+' lots voisins (100m)'});
-  if(OWater.length)items.push({sw:'background:#1565c0;height:3px;border-radius:2px',label:'Cours eau OSM (detecte)'});
+  if(OWater.length)items.push({sw:'background:#0a3d8f;height:3px;border-radius:2px',label:'Cours eau OSM (detecte)'});
   if(OBldg.length)items.push({sw:'background:#e65100;border-radius:50%',label:'Batiment existant (OSM)'});
   if(MH.length)items.push({sw:'background:#26a69a;border:1px dashed #00695c',label:'Marais/etang detecte (precis, MELCCFP)'});
   if(WELLS.length)items.push({sw:'background:#5e35b1;border-radius:50%',label:WELLS.length+' puits/forage (SIH - MELCCFP)'});
-  if(WON.hydro)items.push({sw:'background:#4fa8e0',label:'Cours eau - couche gouv. (GRHQ)'});
+  if(WON.hydro)items.push({sw:'background:#1a6fc4',label:'Cours eau - couche gouv. (GRHQ)'});
   if(WON.road)items.push({sw:'background:#e0665a',label:'Routes - couche gouv. (AQreseau)'});
   if(WON.flood)items.push({sw:'background:repeating-linear-gradient(45deg,#e53935,#e53935 2px,#fff 2px,#fff 5px);border:1px solid #c62828',label:'Zone inondable (MRNF)'});
   if(WON.mh)items.push({sw:'background:#7cb342',label:'Milieux humides - Quebec (MELCCFP)'});
