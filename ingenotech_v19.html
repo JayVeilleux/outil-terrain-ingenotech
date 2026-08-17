@@ -755,8 +755,17 @@ body.capture-active .fp-chrome{display:none}
     <button class="btn" onclick="rezoom()">Recentrer</button>
     <button class="btn" id="btn-measure" onclick="tglMeasure()">Mesurer</button>
   </div>
-  <div class="row">
-    <button class="btn" id="btn-capture" onclick="tglCapture()">Capturer</button>
+  <div class="row fp-chrome">
+    <button class="btn" onclick="capturePreset('base')">Capturer - standard</button>
+  </div>
+  <div class="row fp-chrome">
+    <button class="btn" onclick="capturePreset('wide')">Capturer - elargie</button>
+  </div>
+  <div class="row fp-chrome">
+    <button class="btn" onclick="capturePreset('sat')">Capturer - satellite</button>
+  </div>
+  <div class="row" id="capExitRow" style="display:none">
+    <button class="btn sel" id="btn-capture" onclick="tglCapture()">Reprendre</button>
   </div>
   <div class="row" id="capZoomRow" style="display:none">
     <button class="btn capzoom" onclick="capZoom(-1)" title="Dezoomer (voir plus large)">-</button>
@@ -1167,35 +1176,49 @@ window.capZoom=function(dir){
   document.getElementById('capSizeLabel').textContent=CAP_W_M+' x '+CAP_H_M+' m';
   frameLot(window.innerWidth,window.innerHeight);
 };
-window.tglCapture=function(){
-  if(!captureMode&&searching){setSb('Patiente - recherche en cours...',false);return;}
-  if(!captureMode&&!ALot){setSb('Recherche un lot avant de capturer',false);return;}
-  captureMode=!captureMode;
-  var capbar=document.getElementById('capbar'),btn=document.getElementById('btn-capture');
-  if(captureMode){
-    buildCapLegend();
-    document.body.classList.add('capture-active');
-    capbar.style.display='flex';
-    document.getElementById('capZoomRow').style.display='flex';
-    document.getElementById('capSizeLabel').textContent=CAP_W_M+' x '+CAP_H_M+' m';
-    MAP.dragging.disable();MAP.scrollWheelZoom.disable();MAP.doubleClickZoom.disable();
-    MAP.touchZoom.disable();MAP.boxZoom.disable();
-    if(MAP.tap)MAP.tap.disable();
-    MAP.zoomControl.remove();
-    btn.textContent='Reprendre';btn.className='btn sel';
-    frameLot(window.innerWidth,window.innerHeight);
-  } else {
-    capbar.style.display='none';
-    document.getElementById('capZoomRow').style.display='none';
-    document.body.classList.remove('capture-active');
-    MAP.dragging.enable();MAP.scrollWheelZoom.enable();MAP.doubleClickZoom.enable();
-    MAP.touchZoom.enable();MAP.boxZoom.enable();
-    if(MAP.tap)MAP.tap.enable();
-    MAP.zoomControl.addTo(MAP);
-    btn.textContent='Capturer';btn.className='btn';
-    mapEl.style.width='';mapEl.style.height='';mapEl.style.left='';mapEl.style.top='';mapEl.style.inset='';
-  }
+var CAP_PRESETS={
+  base:{w:350,h:300,base:'street'},
+  wide:{w:700,h:600,base:'street'},
+  sat:{w:350,h:300,base:'sat'}
+};
+function enterCapture(){
+  captureMode=true;
+  buildCapLegend();
+  document.body.classList.add('capture-active');
+  document.getElementById('capbar').style.display='flex';
+  document.getElementById('capExitRow').style.display='flex';
+  document.getElementById('capZoomRow').style.display='flex';
+  document.getElementById('capSizeLabel').textContent=CAP_W_M+' x '+CAP_H_M+' m';
+  MAP.dragging.disable();MAP.scrollWheelZoom.disable();MAP.doubleClickZoom.disable();
+  MAP.touchZoom.disable();MAP.boxZoom.disable();
+  if(MAP.tap)MAP.tap.disable();
+  MAP.zoomControl.remove();
+  frameLot(window.innerWidth,window.innerHeight);
   MAP.invalidateSize();
+}
+function exitCapture(){
+  captureMode=false;
+  document.getElementById('capbar').style.display='none';
+  document.getElementById('capExitRow').style.display='none';
+  document.getElementById('capZoomRow').style.display='none';
+  document.body.classList.remove('capture-active');
+  MAP.dragging.enable();MAP.scrollWheelZoom.enable();MAP.doubleClickZoom.enable();
+  MAP.touchZoom.enable();MAP.boxZoom.enable();
+  if(MAP.tap)MAP.tap.enable();
+  MAP.zoomControl.addTo(MAP);
+  mapEl.style.width='';mapEl.style.height='';mapEl.style.left='';mapEl.style.top='';mapEl.style.inset='';
+  MAP.invalidateSize();
+}
+window.tglCapture=function(){
+  if(captureMode)exitCapture();
+};
+window.capturePreset=function(key){
+  if(searching){setSb('Patiente - recherche en cours...',false);return;}
+  if(!ALot){setSb('Recherche un lot avant de capturer',false);return;}
+  var p=CAP_PRESETS[key];
+  CAP_W_M=p.w;CAP_H_M=p.h;CAP_RATIO=CAP_W_M/CAP_H_M;
+  setBase(p.base);
+  enterCapture();
 };
 
 }); // DOMContentLoaded
