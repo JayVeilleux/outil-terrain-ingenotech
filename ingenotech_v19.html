@@ -770,6 +770,7 @@ td:last-child{text-align:right;font-weight:500}
   <button class="btn on" id="btn-mh" onclick="tglL('mh')">MH - Quebec (MELCCFP)</button>
   <button class="btn" id="btn-mhduc" onclick="tglL('mhduc')">MH - Canards Illimites</button>
   <button class="btn" id="btn-contour" onclick="tglL('contour')">Courbes 1m</button>
+  <button class="btn" id="btn-lits" onclick="tglL('lits')">Lits d'ecoulement</button>
 </div>
 </div>
 <div class="s">
@@ -785,6 +786,7 @@ td:last-child{text-align:right;font-weight:500}
 <div class="lg"><div class="ld" style="background:repeating-linear-gradient(45deg,#e53935,#e53935 2px,#fff 2px,#fff 5px);border:1px solid #c62828"></div>Zone inondable (MRNF)</div>
 <div class="lg"><div class="ld" style="background:#7cb342"></div>Milieux humides - Quebec (MELCCFP)</div>
 <div class="lg"><div class="ld" style="background:#2e7d32"></div>Milieux humides - Canards Illimites</div>
+<div class="lg"><div class="ld" style="background:#1a6fc4;border:1px dashed #0a3d8f"></div>Lit d'ecoulement potentiel (LiDAR MRNF)</div>
 <div class="lg"><div class="ld" style="background:#e8a97d"></div>Courbes de niveau (1m, LiDAR MRNF)</div>
 </div>
 </div></div>
@@ -800,7 +802,7 @@ td:last-child{text-align:right;font-weight:500}
 
 document.addEventListener('DOMContentLoaded', function() {
 
-var MAP, WMS={}, WON={hydro:true,road:true,flood:true,mh:true,mhduc:false,contour:false};
+var MAP, WMS={}, WON={hydro:true,road:true,flood:true,mh:true,mhduc:false,contour:false,lits:false};
 var ALot=null, ABnd=null, LotLayer, NbrLayer;
 var OWater=[], OBldg=[], OLayer;
 var MH=[], MHLayer;
@@ -864,7 +866,8 @@ WMS={
   flood:L.tileLayer.wms('https://servicesvecto3.mern.gouv.qc.ca/geoserver/GrilleInfoZI_Pub/wms',{layers:'GrilleInfoZI',format:'image/png',transparent:true,opacity:.5,maxZoom:21}),
   mh:L.tileLayer.wms('https://geo.environnement.gouv.qc.ca/donnees/services/Biodiversite/MH_potentiels/MapServer/WMSServer',{layers:'Milieux_humides_potentiels11904',format:'image/png',transparent:true,opacity:.6,maxZoom:21}),
   mhduc:L.tileLayer.wms('https://maps.ducks.ca/arcgis/services/Public/QC_Carto_MH_sudqc_2022/MapServer/WMSServer',{layers:'0',format:'image/png',transparent:true,opacity:.6,maxZoom:21}),
-  contour:L.tileLayer.wms('https://geoegl.msp.gouv.qc.ca/ws/mffpecofor.fcgi',{layers:'courbes_niveau_1m',format:'image/png',transparent:true,opacity:.8,maxZoom:21})
+  contour:L.tileLayer.wms('https://geoegl.msp.gouv.qc.ca/ws/mffpecofor.fcgi',{layers:'courbes_niveau_1m',format:'image/png',transparent:true,opacity:.8,maxZoom:21}),
+  lits:L.tileLayer.wms('https://geoegl.msp.gouv.qc.ca/ws/mffpecofor.fcgi',{layers:'hydrolidar_lits',format:'image/png',transparent:true,opacity:.9,maxZoom:21})
 };
 Object.keys(WMS).forEach(function(k){if(WON[k])WMS[k].addTo(MAP);});
 OLayer=L.layerGroup().addTo(MAP);
@@ -1105,6 +1108,7 @@ function buildCapLegend(){
   if(WON.flood)items.push({sw:'background:repeating-linear-gradient(45deg,#e53935,#e53935 2px,#fff 2px,#fff 5px);border:1px solid #c62828',label:'Zone inondable (MRNF)'});
   if(WON.mh)items.push({sw:'background:#7cb342',label:'Milieux humides - Quebec (MELCCFP)'});
   if(WON.mhduc)items.push({sw:'background:#2e7d32',label:'Milieux humides - Canards Illimites'});
+  if(WON.lits)items.push({sw:'background:#1a6fc4;border:1px dashed #0a3d8f',label:"Lit d'ecoulement potentiel (LiDAR MRNF)"});
   if(WON.contour)items.push({sw:'background:#e8a97d',label:'Courbes de niveau (1m, LiDAR MRNF)'});
   var html='<div class="cb-title">Legende</div><div class="cb-legend">';
   items.forEach(function(it){html+='<div class="cb-item"><div class="cb-sw" style="'+it.sw+'"></div>'+it.label+'</div>';});
