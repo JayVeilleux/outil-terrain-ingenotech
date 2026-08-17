@@ -773,8 +773,8 @@ td:last-child{text-align:right;font-weight:500}
 </div>
 <div class="s">
 <div class="st">Legende</div>
-<div class="lg"><div class="ld" style="background:#1a5fa8"></div>Lot recherche</div>
-<div class="lg"><div class="ld" style="background:#aaa"></div>Lot voisin (clic pour changer)</div>
+<div class="lg"><div class="ld" style="background:transparent;border:2px solid #1a5fa8"></div>Lot recherche</div>
+<div class="lg"><div class="ld" style="background:transparent;border:2px solid #888"></div>Lot voisin (clic pour changer)</div>
 <div class="lg"><div class="ld" style="background:#1565c0;height:3px;border-radius:2px"></div>Cours eau OSM (detecte)</div>
 <div class="lg"><div class="ld" style="background:#e65100;border-radius:50%"></div>Batiment existant (OSM)</div>
 <div class="lg"><div class="ld" style="background:#26a69a;border:1px dashed #00695c"></div>Marais/etang detecte (precis, MELCCFP)</div>
@@ -910,7 +910,7 @@ function loadLot(noLotRaw){
     var lats=co.map(function(c){return c[0];}),lngs=co.map(function(c){return c[1];});
     ABnd={sla:Math.min.apply(null,lats),nla:Math.max.apply(null,lats),wln:Math.min.apply(null,lngs),eln:Math.max.apply(null,lngs)};
     LotLayer.clearLayers();
-    var poly=L.polygon(co,{color:'#1a5fa8',weight:3,fillColor:'#1a5fa8',fillOpacity:.12}).addTo(LotLayer).bindPopup('Lot '+ALot.no_lot);
+    var poly=L.polygon(co,{color:'#1a5fa8',weight:3,fillOpacity:0}).addTo(LotLayer).bindPopup('Lot '+ALot.no_lot);
     poly.bindTooltip(ALot.no_lot,{permanent:true,direction:'center',className:'lot-label'});
     MAP.fitBounds(poly.getBounds(),{padding:[60,60]});
     document.getElementById('cl').textContent=ALot.no_lot;
@@ -940,7 +940,7 @@ function loadNeighbors(){
       var nl=f.properties.NO_LOT;
       if(nl===ALot.no_lot)return;
       var co=f.geometry.coordinates[0].map(function(c){return[c[1],c[0]];});
-      var poly=L.polygon(co,{color:'#888',weight:1.5,fillColor:'#ccc',fillOpacity:.35}).addTo(NbrLayer);
+      var poly=L.polygon(co,{color:'#888',weight:1.5,fillOpacity:0}).addTo(NbrLayer);
       poly.bindPopup('Lot '+nl+' (voisin)<br><span style="color:#1a5fa8">Clic pour le rechercher</span>');
       poly.bindTooltip(nl,{permanent:true,direction:'center',className:'lot-label-nbr'});
       poly.on('click',function(e){L.DomEvent.stopPropagation(e);if(captureMode)return;loadLot(nl);});
@@ -1091,8 +1091,8 @@ window.rezoom=function(){if(LotLayer.getLayers().length)MAP.fitBounds(LotLayer.g
 var captureMode=false;
 function buildCapLegend(){
   var items=[];
-  items.push({sw:'background:#1a5fa8',label:'Lot '+(ALot?ALot.no_lot:'-')});
-  if(NbrLayer.getLayers().length)items.push({sw:'background:#aaa',label:NbrLayer.getLayers().length+' lots voisins (100m)'});
+  items.push({sw:'background:transparent;border:2px solid #1a5fa8',label:'Lot '+(ALot?ALot.no_lot:'-')});
+  if(NbrLayer.getLayers().length)items.push({sw:'background:transparent;border:2px solid #888',label:NbrLayer.getLayers().length+' lots voisins (100m)'});
   if(OWater.length)items.push({sw:'background:#1565c0;height:3px;border-radius:2px',label:'Cours eau OSM (detecte)'});
   if(OBldg.length)items.push({sw:'background:#e65100;border-radius:50%',label:'Batiment existant (OSM)'});
   if(MH.length)items.push({sw:'background:#26a69a;border:1px dashed #00695c',label:'Marais/etang detecte (precis, MELCCFP)'});
