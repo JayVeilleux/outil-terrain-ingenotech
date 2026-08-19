@@ -796,7 +796,6 @@ body.capture-active .well-label{display:block}
       <button class="btn" id="btn-contour" onclick="tglL('contour')">Courbes 1m</button>
       <button class="btn" id="btn-lits" onclick="tglL('lits')">Lit d'ecoulement</button>
     </div>
-    <div class="fp-statusline"><div id="dot" class="fp-dot"></div><span id="otxt">OSM: en attente</span><button class="btn tiny" onclick="loadOSM()" title="Recharger OSM">&#8635;</button></div>
     <div class="fp-statusline"><div id="mhdot" class="fp-dot"></div><span id="mhtxt">MH: en attente</span><button class="btn tiny" onclick="loadMH()" title="Recharger MH">&#8635;</button></div>
     <div class="fp-statusline"><div id="welldot" class="fp-dot"></div><span id="welltxt">Puits: en attente</span><button class="btn tiny" onclick="loadWells()" title="Recharger puits">&#8635;</button></div>
   </div>
@@ -807,7 +806,6 @@ body.capture-active .well-label{display:block}
   <div class="fp-expand" id="legendExpand" style="display:none">
     <div class="lg"><div class="ld" style="background:transparent;border:2px solid #1a5fa8"></div>Lot recherche</div>
     <div class="lg"><div class="ld" style="background:transparent;border:2px solid #888"></div>Lot voisin (clic pour changer)</div>
-    <div class="lg"><div class="ld" style="background:#e65100;border-radius:50%"></div>Batiment existant (OSM)</div>
     <div class="lg"><div class="ld" style="background:#26a69a;border:1px dashed #00695c"></div>Marais/etang detecte (precis, MELCCFP)</div>
     <div class="lg"><div class="ld" style="background:#5e35b1;border-radius:50%"></div>Puits/forage (SIH - MELCCFP)</div>
     <div class="lg"><div class="ld" style="background:#1a6fc4"></div>Cours eau - couche gouv. (GRHQ)</div>
@@ -832,7 +830,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 var MAP, WMS={}, WON={hydro:true,road:true,flood:true,mh:true,mhduc:false,contour:false,lits:false};
 var ALot=null, ABnd=null, LotLayer, NbrLayer;
-var OBldg=[], OLayer;
 var MH=[], MHLayer;
 var WELLS=[], WellLayer;
 var measuring=false, measurePts=[], MeasureLayer;
@@ -864,7 +861,6 @@ WMS={
   lits:L.tileLayer.wms('https://geoegl.msp.gouv.qc.ca/ws/mffpecofor.fcgi',{layers:'hydrolidar_lits',format:'image/png',transparent:true,opacity:.9,maxZoom:21})
 };
 Object.keys(WMS).forEach(function(k){if(WON[k])WMS[k].addTo(MAP);});
-OLayer=L.layerGroup().addTo(MAP);
 MHLayer=L.layerGroup().addTo(MAP);
 WellLayer=L.layerGroup().addTo(MAP);
 MeasureLayer=L.layerGroup().addTo(MAP);
@@ -917,7 +913,6 @@ function loadLot(noLotRaw){
     document.getElementById('searchresult').style.display='flex';
     setSb('Lot '+ALot.no_lot+' charge',true);
     loadNeighbors();
-    loadOSM();
     loadMH();
     loadWells();
   }).catch(function(){searching=false;setSb('Erreur de recherche - verifie ta connexion internet',false);});
@@ -951,48 +946,6 @@ function loadNeighbors(){
 }
 
 // OSM (cours eau, batiments)
-window.loadOSM=function(){
-  if(!ABnd)return;
-  document.getElementById('dot').style.background='#ffb400';
-  document.getElementById('otxt').textContent='Chargement OSM...';
-  var buf=0.005;
-  var s=ABnd.sla-buf,n=ABnd.nla+buf,w=ABnd.wln-buf,e=ABnd.eln+buf;
-  var q='[out:json][timeout:25];('
-    +'way["building"]('+s+','+w+','+n+','+e+');'
-    +'node["addr:housenumber"]('+s+','+w+','+n+','+e+');'
-    +');out body;>;out skel qt;';
-  var ctrl=new AbortController(),tid=setTimeout(function(){ctrl.abort();},15000);
-  fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(q),signal:ctrl.signal})
-  .then(function(r){clearTimeout(tid);return r.json();})
-  .then(function(data){
-    OLayer.clearLayers();OBldg=[];
-    var nd={};
-    data.elements.forEach(function(el){if(el.type==='node')nd[el.id]={lat:el.lat,lon:el.lon,tags:el.tags||{}};});
-    var bc=0;
-    data.elements.forEach(function(el){
-      var t=el.tags||{};
-      if(el.type==='node'&&(t['addr:housenumber']||t.building)){
-        var num=t['addr:housenumber']||'';
-        L.circleMarker([nd[el.id].lat,nd[el.id].lon],{radius:5,color:'#e65100',fillColor:'#ff8800',fillOpacity:.85,weight:2})
-          .addTo(OLayer).bindPopup('Batiment'+(num?' No:'+num:'')+'<br>Min: 5m');
-        OBldg.push({lat:nd[el.id].lat,lon:nd[el.id].lon});bc++;
-      }
-      if(el.type==='way'&&t.building){
-        var co2=(el.nodes||[]).filter(function(id){return nd[id];}).map(function(id){return[nd[id].lat,nd[id].lon];});
-        if(co2.length<3)return;
-        L.polygon(co2,{color:'#e65100',weight:1.5,fillColor:'#ff8800',fillOpacity:.2}).addTo(OLayer).bindPopup('Batiment<br>Min: 5m');
-        OBldg.push({poly:co2});bc++;
-      }
-    });
-    document.getElementById('dot').style.background='#2e7d32';
-    document.getElementById('otxt').textContent='OSM: '+bc+' batiments';
-  })
-  .catch(function(){
-    document.getElementById('dot').style.background='#c62828';
-    document.getElementById('otxt').textContent='OSM non disponible';
-  });
-};
-
 // MILIEUX HUMIDES (marais / etang - MELCCFP)
 window.loadMH=function(){
   if(!ABnd)return;
@@ -1121,7 +1074,6 @@ function buildCapLegend(){
   var items=[];
   items.push({sw:'background:transparent;border:2px solid #1a5fa8',label:'Lot '+(ALot?ALot.no_lot:'-')});
   if(NbrLayer.getLayers().length)items.push({sw:'background:transparent;border:2px solid #888',label:NbrLayer.getLayers().length+' lots voisins (100m)'});
-  if(OBldg.length)items.push({sw:'background:#e65100;border-radius:50%',label:'Batiment existant (OSM)'});
   if(MH.length)items.push({sw:'background:#26a69a;border:1px dashed #00695c',label:'Marais/etang detecte (precis, MELCCFP)'});
   if(WELLS.length)items.push({sw:'background:#5e35b1;border-radius:50%',label:WELLS.length+' puits/forage (SIH - MELCCFP)'});
   if(WON.hydro)items.push({sw:'background:#1a6fc4',label:'Cours eau - couche gouv. (GRHQ)'});
