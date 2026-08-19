@@ -807,7 +807,6 @@ body.capture-active .well-label{display:block}
   <div class="fp-expand" id="legendExpand" style="display:none">
     <div class="lg"><div class="ld" style="background:transparent;border:2px solid #1a5fa8"></div>Lot recherche</div>
     <div class="lg"><div class="ld" style="background:transparent;border:2px solid #888"></div>Lot voisin (clic pour changer)</div>
-    <div class="lg"><div class="ld" style="background:#0a3d8f;height:3px;border-radius:2px"></div>Cours eau OSM (detecte)</div>
     <div class="lg"><div class="ld" style="background:#e65100;border-radius:50%"></div>Batiment existant (OSM)</div>
     <div class="lg"><div class="ld" style="background:#26a69a;border:1px dashed #00695c"></div>Marais/etang detecte (precis, MELCCFP)</div>
     <div class="lg"><div class="ld" style="background:#5e35b1;border-radius:50%"></div>Puits/forage (SIH - MELCCFP)</div>
@@ -833,7 +832,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 var MAP, WMS={}, WON={hydro:true,road:true,flood:true,mh:true,mhduc:false,contour:false,lits:false};
 var ALot=null, ABnd=null, LotLayer, NbrLayer;
-var OWater=[], OBldg=[], OLayer;
+var OBldg=[], OLayer;
 var MH=[], MHLayer;
 var WELLS=[], WellLayer;
 var measuring=false, measurePts=[], MeasureLayer;
@@ -959,11 +958,6 @@ window.loadOSM=function(){
   var buf=0.005;
   var s=ABnd.sla-buf,n=ABnd.nla+buf,w=ABnd.wln-buf,e=ABnd.eln+buf;
   var q='[out:json][timeout:25];('
-    +'way["waterway"="river"]('+s+','+w+','+n+','+e+');'
-    +'way["waterway"="stream"]('+s+','+w+','+n+','+e+');'
-    +'way["waterway"="canal"]('+s+','+w+','+n+','+e+');'
-    +'way["natural"="water"]('+s+','+w+','+n+','+e+');'
-    +'relation["natural"="water"]('+s+','+w+','+n+','+e+');'
     +'way["building"]('+s+','+w+','+n+','+e+');'
     +'node["addr:housenumber"]('+s+','+w+','+n+','+e+');'
     +');out body;>;out skel qt;';
@@ -971,23 +965,12 @@ window.loadOSM=function(){
   fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(q),signal:ctrl.signal})
   .then(function(r){clearTimeout(tid);return r.json();})
   .then(function(data){
-    OLayer.clearLayers();OWater=[];OBldg=[];
+    OLayer.clearLayers();OBldg=[];
     var nd={};
     data.elements.forEach(function(el){if(el.type==='node')nd[el.id]={lat:el.lat,lon:el.lon,tags:el.tags||{}};});
-    var wc=0,bc=0;
+    var bc=0;
     data.elements.forEach(function(el){
       var t=el.tags||{};
-      var isWater=t.waterway||t.natural==='water'||t.water;
-      if(el.type==='way'&&isWater){
-        var co=(el.nodes||[]).filter(function(id){return nd[id];}).map(function(id){return[nd[id].lat,nd[id].lon];});
-        if(co.length<2)return;
-        var nm=t.name||t.waterway||'Eau';
-        var isRiver=t.waterway==='river';
-        L.polyline(co,{color:'#0a3d8f',weight:isRiver?5:4,opacity:1}).addTo(OLayer)
-          .bindPopup(nm+'<br>Min: 15m depuis le bord');
-        OWater.push({coords:co,name:nm});
-        wc++;
-      }
       if(el.type==='node'&&(t['addr:housenumber']||t.building)){
         var num=t['addr:housenumber']||'';
         L.circleMarker([nd[el.id].lat,nd[el.id].lon],{radius:5,color:'#e65100',fillColor:'#ff8800',fillOpacity:.85,weight:2})
@@ -1002,7 +985,7 @@ window.loadOSM=function(){
       }
     });
     document.getElementById('dot').style.background='#2e7d32';
-    document.getElementById('otxt').textContent='OSM: '+wc+' cours eau, '+bc+' batiments';
+    document.getElementById('otxt').textContent='OSM: '+bc+' batiments';
   })
   .catch(function(){
     document.getElementById('dot').style.background='#c62828';
@@ -1138,7 +1121,6 @@ function buildCapLegend(){
   var items=[];
   items.push({sw:'background:transparent;border:2px solid #1a5fa8',label:'Lot '+(ALot?ALot.no_lot:'-')});
   if(NbrLayer.getLayers().length)items.push({sw:'background:transparent;border:2px solid #888',label:NbrLayer.getLayers().length+' lots voisins (100m)'});
-  if(OWater.length)items.push({sw:'background:#0a3d8f;height:3px;border-radius:2px',label:'Cours eau OSM (detecte)'});
   if(OBldg.length)items.push({sw:'background:#e65100;border-radius:50%',label:'Batiment existant (OSM)'});
   if(MH.length)items.push({sw:'background:#26a69a;border:1px dashed #00695c',label:'Marais/etang detecte (precis, MELCCFP)'});
   if(WELLS.length)items.push({sw:'background:#5e35b1;border-radius:50%',label:WELLS.length+' puits/forage (SIH - MELCCFP)'});
