@@ -744,35 +744,41 @@ body.capture-active .well-label{display:block}
 <div id="capbar"></div>
 
 <div class="floatpanel fp-topleft fp-chrome" id="fsearch">
-  <div class="fp-brand">Ingenotech<span>Outil terrain</span></div>
-  <div class="row">
-    <input id="lotinput" type="text" placeholder="No de lot (ex: 6 568 623)">
-    <button class="btn on" onclick="searchLot()">Rechercher</button>
+  <button class="fp-toggle" onclick="tglFloat('search')">Inscrire Lot</button>
+  <div class="fp-expand" id="searchExpand" style="display:none">
+    <div class="fp-brand">Ingenotech<span>Outil terrain</span></div>
+    <div class="row">
+      <input id="lotinput" type="text" placeholder="No de lot (ex: 6 568 623)">
+      <button class="btn on" onclick="searchLot()">Rechercher</button>
+    </div>
+    <div class="fp-result" id="searchresult" style="display:none">
+      <div class="fp-result-row"><span>Lot actif</span><strong id="cl">-</strong></div>
+      <div class="fp-result-row"><span>Lots voisins (100m)</span><strong id="cn">-</strong></div>
+    </div>
+    <div id="sb" class="fp-status">Entrez un numero de lot pour commencer</div>
   </div>
-  <div class="fp-result" id="searchresult" style="display:none">
-    <div class="fp-result-row"><span>Lot actif</span><strong id="cl">-</strong></div>
-    <div class="fp-result-row"><span>Lots voisins (100m)</span><strong id="cn">-</strong></div>
-  </div>
-  <div id="sb" class="fp-status">Entrez un numero de lot pour commencer</div>
 </div>
 
 <div class="floatpanel fp-topright">
-  <div class="row seg fp-chrome">
-    <button class="btn on" id="base-street" onclick="setBase('street')">Plan</button>
-    <button class="btn" id="base-sat" onclick="setBase('sat')">Satellite</button>
-  </div>
-  <div class="row fp-chrome">
-    <button class="btn" onclick="rezoom()">Recentrer</button>
-    <button class="btn" id="btn-measure" onclick="tglMeasure()">Mesurer</button>
-  </div>
-  <div class="row fp-chrome">
-    <button class="btn" onclick="capturePreset('base')">Capturer - standard</button>
-  </div>
-  <div class="row fp-chrome">
-    <button class="btn" onclick="capturePreset('wide')">Capturer - elargie</button>
-  </div>
-  <div class="row fp-chrome">
-    <button class="btn" onclick="capturePreset('sat')">Capturer - satellite</button>
+  <button class="fp-toggle fp-chrome" onclick="tglFloat('tools')">Outils/Autres</button>
+  <div class="fp-expand" id="toolsExpand" style="display:none">
+    <div class="row seg fp-chrome">
+      <button class="btn on" id="base-street" onclick="setBase('street')">Plan</button>
+      <button class="btn" id="base-sat" onclick="setBase('sat')">Satellite</button>
+    </div>
+    <div class="row fp-chrome">
+      <button class="btn" onclick="rezoom()">Recentrer</button>
+      <button class="btn" id="btn-measure" onclick="tglMeasure()">Mesurer</button>
+    </div>
+    <div class="row fp-chrome">
+      <button class="btn" onclick="capturePreset('base')">Capturer - standard</button>
+    </div>
+    <div class="row fp-chrome">
+      <button class="btn" onclick="capturePreset('wide')">Capturer - elargie</button>
+    </div>
+    <div class="row fp-chrome">
+      <button class="btn" onclick="capturePreset('sat')">Capturer - satellite</button>
+    </div>
   </div>
   <div class="row" id="capExitRow" style="display:none">
     <button class="btn sel" id="btn-capture" onclick="tglCapture()">Reprendre</button>
@@ -836,9 +842,9 @@ var measuring=false, measurePts=[], MeasureLayer;
 var mapEl=document.getElementById('map');
 var CAD_URL='https://geo.environnement.gouv.qc.ca/donnees/rest/services/Reference/Cadastre_allege/MapServer/0/query';
 
+var FLOAT_IDS={layers:'layersExpand',legend:'legendExpand',search:'searchExpand',tools:'toolsExpand'};
 window.tglFloat=function(which){
-  var id=which==='layers'?'layersExpand':'legendExpand';
-  var el=document.getElementById(id);
+  var el=document.getElementById(FLOAT_IDS[which]);
   el.style.display=el.style.display==='none'?'':'none';
 };
 
