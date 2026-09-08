@@ -3,8 +3,13 @@
 // (cadastre, milieux humides, puits, tuiles de carte) passent toujours par
 // le reseau normalement - jamais mises en cache, pour ne jamais montrer une
 // information perimee ou trompeuse sur le terrain.
+//
+// La coquille elle-meme est en "reseau d'abord": on va toujours chercher la
+// derniere version en ligne quand il y a une connexion, et on ne se rabat sur
+// la copie locale que si l'appareil est hors ligne. Ca evite qu'un telephone
+// reste bloque sur une version perimee de l'outil apres une mise a jour.
 
-var CACHE = 'outil-terrain-shell-v1';
+var CACHE = 'outil-terrain-shell-v2';
 var SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function (e) {
@@ -32,12 +37,9 @@ self.addEventListener('fetch', function (e) {
   }
 
   e.respondWith(
-    caches.match(e.request).then(function (cached) {
-      var network = fetch(e.request).then(function (res) {
-        caches.open(CACHE).then(function (c) { c.put(e.request, res.clone()); });
-        return res;
-      }).catch(function () { return cached; });
-      return cached || network;
-    })
+    fetch(e.request).then(function (res) {
+      caches.open(CACHE).then(function (c) { c.put(e.request, res.clone()); });
+      return res;
+    }).catch(function () { return caches.match(e.request); })
   );
 });
