@@ -1046,6 +1046,8 @@ function identifyLotAt(latlng){
 }
 MAP.on('click',function(e){
   if(measuring||captureMode)return;
+  var t=e.originalEvent&&e.originalEvent.target;
+  if(t&&t.closest&&t.closest('.leaflet-control'))return;
   identifyLotAt(e.latlng);
 });
 
