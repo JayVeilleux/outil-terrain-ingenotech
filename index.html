@@ -920,16 +920,31 @@ function loadLot(noLotRaw){
       var rf=ring[0],rl=ring[ring.length-1];
       if(rf[0]===rl[0]&&rf[1]===rl[1])ring.pop();
     }
-    ring.forEach(function(p1,i){
-      var p2=ring[(i+1)%ring.length];
-      var d=MAP.distance(p1,p2);
-      if(d<1)return;
-      var mid=[(p1[0]+p2[0])/2,(p1[1]+p2[1])/2];
-      var txt=d<1000?(Math.round(d*10)/10)+' m':(Math.round(d/100)/10)+' km';
-      L.circleMarker(mid,{radius:0,opacity:0,fillOpacity:0})
-        .addTo(LotLayer)
-        .bindTooltip(txt,{permanent:true,direction:'center',className:'lot-side-label'});
-    });
+    // Regroupe les segments quasi alignes (bruit de digitalisation du cadastre,
+    // souvent des petits segments de ~1m) en un seul cote avant de mesurer,
+    // pour ne pas afficher une foule de petites longueurs sur une ligne droite.
+    if(ring.length>2){
+      var latMidL=(ABnd.sla+ABnd.nla)/2, cosL=Math.cos(latMidL*Math.PI/180);
+      var bearing=function(p1,p2){return Math.atan2((p2[1]-p1[1])*cosL,p2[0]-p1[0])*180/Math.PI;};
+      var angDiff=function(a,b){var d=Math.abs(a-b)%360;return d>180?360-d:d;};
+      var ANGLE_THRESH=15;
+      var eb=ring.map(function(p,i){return bearing(p,ring[(i+1)%ring.length]);});
+      var runs=[],curStart=0;
+      for(var k=1;k<ring.length;k++){
+        if(angDiff(eb[k-1],eb[k])>ANGLE_THRESH){runs.push({s:curStart,e:k-1});curStart=k;}
+      }
+      runs.push({s:curStart,e:ring.length-1});
+      runs.forEach(function(r){
+        var p1=ring[r.s],p2=ring[(r.e+1)%ring.length];
+        var d=MAP.distance(p1,p2);
+        if(d<1)return;
+        var mid=[(p1[0]+p2[0])/2,(p1[1]+p2[1])/2];
+        var txt=d<1000?(Math.round(d*10)/10)+' m':(Math.round(d/100)/10)+' km';
+        L.circleMarker(mid,{radius:0,opacity:0,fillOpacity:0})
+          .addTo(LotLayer)
+          .bindTooltip(txt,{permanent:true,direction:'center',className:'lot-side-label'});
+      });
+    }
     MAP.fitBounds(poly.getBounds(),{padding:[60,60]});
     document.getElementById('cl').textContent=ALot.no_lot;
     document.getElementById('lotinput').value=ALot.no_lot;
