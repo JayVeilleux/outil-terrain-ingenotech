@@ -868,6 +868,16 @@ window.tglFloat=function(which){
 MAP=L.map('map',{zoomControl:false,zoomSnap:0,rotate:true,rotateControl:false,touchRotate:true,bearing:0}).setView([45.367605,-71.96657],16);
 MAP.zoomControl=L.control.zoom({position:'bottomright'}).addTo(MAP);
 
+// Sur iOS/PWA en mode installe, la hauteur reelle de l'ecran (barre de geste,
+// zone securitaire) se stabilise parfois apres l'initialisation de la carte,
+// ce qui laisse une bande vide non couverte par les tuiles en bas. On force
+// Leaflet a se re-mesurer une fois que tout est bien en place, et a chaque
+// redimensionnement (rotation d'ecran, barre d'adresse qui se cache, etc.)
+setTimeout(function(){MAP.invalidateSize();},300);
+window.addEventListener('resize',function(){MAP.invalidateSize();});
+window.addEventListener('orientationchange',function(){setTimeout(function(){MAP.invalidateSize();},300);});
+if(window.visualViewport){window.visualViewport.addEventListener('resize',function(){MAP.invalidateSize();});}
+
 // Boussole: bouton pres du zoom, glisser pour tourner la vue, cliquer pour remettre au Nord.
 var CompassCtrl=L.Control.extend({
   options:{position:'bottomright'},
