@@ -816,7 +816,7 @@ body.capture-active .well-label{display:block}
   <button class="fp-toggle" onclick="tglFloat('legend')">Legende</button>
   <div class="fp-expand" id="legendExpand" style="display:none">
     <div class="lg"><div class="ld" style="background:transparent;border:2px solid #1a5fa8"></div>Lot recherche</div>
-    <div class="lg"><div class="ld" style="background:transparent;border:2px solid #888"></div>Lot voisin (clic pour changer)</div>
+    <div class="lg"><div class="ld" style="background:transparent;border:2px solid #888"></div>Lot voisin (clic pour voir, puis confirmer)</div>
     <div class="lg"><div class="ld" style="background:#26a69a;border:1px dashed #00695c"></div>Marais/etang detecte (precis, MELCCFP)</div>
     <div class="lg"><div class="ld" style="background:#5e35b1;border-radius:50%"></div>Puits/forage (SIH - MELCCFP)</div>
     <div class="lg"><div class="ld" style="background:#1a6fc4"></div>Cours eau - couche gouv. (GRHQ)</div>
@@ -1017,6 +1017,7 @@ function loadLot(noLotRaw){
     loadWells();
   }).catch(function(){searching=false;setSb('Erreur de recherche - verifie ta connexion internet',false);});
 }
+window.goToNeighborLot=function(nl){MAP.closePopup();loadLot(nl);};
 
 var NBR_BUF_M=100;
 function loadNeighbors(){
@@ -1036,9 +1037,10 @@ function loadNeighbors(){
       if(nl===ALot.no_lot)return;
       var co=f.geometry.coordinates[0].map(function(c){return[c[1],c[0]];});
       var poly=L.polygon(co,{color:'#888',weight:1.5,fillOpacity:0}).addTo(NbrLayer);
-      poly.bindPopup('Lot '+nl+' (voisin)<br><span style="color:#1a5fa8">Clic pour le rechercher</span>');
+      var nlEsc=nl.replace(/'/g,"\\'");
+      poly.bindPopup('Lot '+nl+' (voisin)<br><button class="btn on" style="margin-top:6px" onclick="window.goToNeighborLot(\''+nlEsc+'\')">Rechercher ce lot</button>');
       poly.bindTooltip(nl,{permanent:true,direction:'center',className:'lot-label-nbr'});
-      poly.on('click',function(e){if(measuring)return;L.DomEvent.stopPropagation(e);if(captureMode)return;loadLot(nl);});
+      poly.on('click',function(e){if(measuring)return;L.DomEvent.stopPropagation(e);});
       n++;
     });
     document.getElementById('cn').textContent=n;
