@@ -1021,6 +1021,34 @@ function loadLot(noLotRaw){
 }
 window.goToNeighborLot=function(nl){MAP.closePopup();loadLot(nl);};
 
+// Clic sur une zone vide de la carte (pas sur un lot deja affiche, un puits, un MH, etc.):
+// on identifie le lot cadastral a cet endroit et on propose de le rechercher.
+var identifying=false;
+function identifyLotAt(latlng){
+  if(identifying||searching)return;
+  identifying=true;
+  setSb('Recherche du lot a cet endroit...',true);
+  var url=CAD_URL+'?f=geojson&outSR=4326&inSR=4326&returnGeometry=false&outFields=NO_LOT'
+    +'&geometryType=esriGeometryPoint&spatialRel=esriSpatialRelIntersects'
+    +'&geometry='+latlng.lng+','+latlng.lat;
+  fetch(url).then(function(r){return r.json();}).then(function(data){
+    identifying=false;
+    if(!data.features||!data.features.length){setSb('Aucun lot cadastral a cet endroit',false);return;}
+    var nl=data.features[0].properties.NO_LOT;
+    if(ALot&&nl===ALot.no_lot){setSb('Lot '+nl+' deja affiche',true);return;}
+    var nlEsc=nl.replace(/'/g,"\\'");
+    setSb('Lot '+nl+' trouve a cet endroit',true);
+    L.popup({closeButton:true})
+      .setLatLng(latlng)
+      .setContent('Lot '+nl+' ici<br><button class="btn on" style="margin-top:6px" onclick="window.goToNeighborLot(\''+nlEsc+'\')">Rechercher ce lot</button>')
+      .openOn(MAP);
+  }).catch(function(){identifying=false;setSb('Erreur de recherche a cet endroit',false);});
+}
+MAP.on('click',function(e){
+  if(measuring||captureMode)return;
+  identifyLotAt(e.latlng);
+});
+
 var NBR_BUF_M=100;
 function loadNeighbors(){
   NbrLayer.clearLayers();
