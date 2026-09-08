@@ -802,8 +802,8 @@ body.capture-active .well-label{display:block}
       <button class="btn on" id="btn-hydro" onclick="tglL('hydro')">Cours eau</button>
       <button class="btn on" id="btn-road" onclick="tglL('road')">Routes</button>
       <button class="btn on" id="btn-flood" onclick="tglL('flood')">Zone inondable</button>
-      <button class="btn on" id="btn-mh" onclick="tglL('mh')">MH - Quebec (MELCCFP)</button>
-      <button class="btn" id="btn-mhduc" onclick="tglL('mhduc')">MH - Canards Illimites</button>
+      <button class="btn" id="btn-mh" onclick="tglL('mh')">MH - Quebec (MELCCFP)</button>
+      <button class="btn on" id="btn-mhduc" onclick="tglL('mhduc')">MH - Canards Illimites</button>
       <button class="btn" id="btn-contour" onclick="tglL('contour')">Courbes 1m</button>
       <button class="btn" id="btn-lits" onclick="tglL('lits')">Lit d'ecoulement</button>
     </div>
@@ -844,7 +844,7 @@ body.capture-active .well-label{display:block}
 
 document.addEventListener('DOMContentLoaded', function() {
 
-var MAP, WMS={}, WON={hydro:true,road:true,flood:true,mh:true,mhduc:false,contour:false,lits:false};
+var MAP, WMS={}, WON={hydro:true,road:true,flood:true,mh:false,mhduc:true,contour:false,lits:false};
 var ALot=null, ABnd=null, LotLayer, NbrLayer;
 var MH=[], MHLayer;
 var WELLS=[], WellLayer;
