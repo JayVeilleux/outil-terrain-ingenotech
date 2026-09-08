@@ -723,6 +723,8 @@ body{background:#eee}
 .lot-label-nbr:before{display:none}
 .measure-label{background:#ad1457;border:none;box-shadow:0 1px 3px rgba(0,0,0,.35);padding:3px 8px;font-size:12px;font-weight:700;color:#fff;border-radius:4px}
 .measure-label:before{display:none}
+.lot-side-label{background:transparent;border:none;box-shadow:none;padding:0;font-size:10.5px;font-weight:700;color:#e65100;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 0 3px #fff}
+.lot-side-label:before{display:none}
 .hydro-tiles{filter:saturate(1.6) brightness(.8) contrast(1.15)}
 .well-label{display:none;background:transparent;border:none;box-shadow:none;padding:0;font-size:10.5px;font-weight:700;color:#4527a0;line-height:1.25;text-align:center;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 0 3px #fff}
 .well-label:before{display:none}
@@ -913,6 +915,21 @@ function loadLot(noLotRaw){
     LotLayer.clearLayers();
     var poly=L.polygon(co,{color:'#1a5fa8',weight:3,fillOpacity:0}).addTo(LotLayer).bindPopup('Lot '+ALot.no_lot);
     poly.bindTooltip(ALot.no_lot,{permanent:true,direction:'center',className:'lot-label'});
+    var ring=co.slice();
+    if(ring.length>1){
+      var rf=ring[0],rl=ring[ring.length-1];
+      if(rf[0]===rl[0]&&rf[1]===rl[1])ring.pop();
+    }
+    ring.forEach(function(p1,i){
+      var p2=ring[(i+1)%ring.length];
+      var d=MAP.distance(p1,p2);
+      if(d<1)return;
+      var mid=[(p1[0]+p2[0])/2,(p1[1]+p2[1])/2];
+      var txt=d<1000?(Math.round(d*10)/10)+' m':(Math.round(d/100)/10)+' km';
+      L.circleMarker(mid,{radius:0,opacity:0,fillOpacity:0})
+        .addTo(LotLayer)
+        .bindTooltip(txt,{permanent:true,direction:'center',className:'lot-side-label'});
+    });
     MAP.fitBounds(poly.getBounds(),{padding:[60,60]});
     document.getElementById('cl').textContent=ALot.no_lot;
     document.getElementById('lotinput').value=ALot.no_lot;
