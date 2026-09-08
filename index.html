@@ -736,7 +736,8 @@ body.capture-active .fp-chrome{display:none}
 body.capture-active .well-label{display:block}
 
 @media (max-width:640px){
-  .fp-topleft{width:calc(100vw - 28px)}
+  .fp-topleft{width:auto;max-width:calc(100vw - 28px)}
+  .fp-topleft.fp-open{width:calc(100vw - 28px)}
   .fp-topright{max-width:calc(100vw - 28px)}
   .fp-bottomleft,.fp-bottomright{max-width:calc(100vw - 28px)}
 }
@@ -855,7 +856,10 @@ var CAD_URL='https://geo.environnement.gouv.qc.ca/donnees/rest/services/Referenc
 var FLOAT_IDS={layers:'layersExpand',legend:'legendExpand',search:'searchExpand',tools:'toolsExpand'};
 window.tglFloat=function(which){
   var el=document.getElementById(FLOAT_IDS[which]);
-  el.style.display=el.style.display==='none'?'':'none';
+  var open=el.style.display==='none';
+  el.style.display=open?'':'none';
+  var panel=el.closest('.floatpanel');
+  if(panel)panel.classList.toggle('fp-open',open);
 };
 
 // CARTE
