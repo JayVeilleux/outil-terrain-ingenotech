@@ -1034,7 +1034,7 @@ window.loadWells=function(){
       var date=p.DATE_FORAGE?p.DATE_FORAGE.substring(0,10):'inconnue';
       var lot=p.NO_LOT_CADAST?'<br>Lot: '+p.NO_LOT_CADAST:'';
       var wellMk=L.circleMarker([la,ln],{radius:6,color:'#4527a0',fillColor:'#5e35b1',fillOpacity:.85,weight:2})
-        .addTo(WellLayer).bindPopup('Puits/forage'+lot+'<br>Profondeur: '+prof+'<br>Fore le: '+date+'<br>Min: 30m');
+        .addTo(WellLayer).bindPopup('Puits/forage'+lot+'<br>Profondeur: '+prof+'<br>Fore le: '+date);
       var labelBits=[];
       if(p.PROFOND_PUITS)labelBits.push(prof);
       if(p.DATE_FORAGE)labelBits.push(date);
