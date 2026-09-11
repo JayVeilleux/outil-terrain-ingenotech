@@ -854,6 +854,17 @@ var WELLS=[], WellLayer;
 var measuring=false, measurePts=[], MeasureLayer;
 var mapEl=document.getElementById('map');
 var CAD_URL='https://geo.environnement.gouv.qc.ca/donnees/rest/services/Reference/Cadastre_allege/MapServer/0/query';
+// Le service du cadastre a l'occasion des ratés/lenteurs temporaires (reseau ou serveur).
+// On reessaie automatiquement une couple de fois avant d'afficher une erreur a l'usager.
+function fetchWithRetry(url,retries,delay){
+  retries=retries===undefined?2:retries;
+  delay=delay||1200;
+  return fetch(url).catch(function(err){
+    if(retries<=0)throw err;
+    return new Promise(function(res){setTimeout(res,delay);})
+      .then(function(){return fetchWithRetry(url,retries-1,delay);});
+  });
+}
 
 var FLOAT_IDS={layers:'layersExpand',legend:'legendExpand',search:'searchExpand',tools:'toolsExpand'};
 window.tglFloat=function(which){
@@ -984,7 +995,7 @@ function loadLot(noLotRaw){
   setSb('Recherche du lot '+noLot+'...',true);
   var where="NO_LOT='"+noLot.replace(/'/g,"''")+"'";
   var url=CAD_URL+'?f=geojson&outSR=4326&returnGeometry=true&outFields=NO_LOT&where='+encodeURIComponent(where);
-  fetch(url).then(function(r){return r.json();}).then(function(data){
+  fetchWithRetry(url).then(function(r){return r.json();}).then(function(data){
     searching=false;
     if(!data.features||!data.features.length){setSb('Lot '+noLot+' introuvable au cadastre',false);return;}
     var f=data.features[0];
@@ -1033,7 +1044,7 @@ function loadLot(noLotRaw){
     loadNeighbors();
     loadMH();
     loadWells();
-  }).catch(function(){searching=false;setSb('Erreur de recherche - verifie ta connexion internet',false);});
+  }).catch(function(){searching=false;setSb('Erreur de recherche - le service est peut-etre temporairement occupe, reessaie dans un instant',false);});
 }
 window.goToNeighborLot=function(nl){MAP.closePopup();loadLot(nl);};
 
@@ -1047,7 +1058,7 @@ function identifyLotAt(latlng){
   var url=CAD_URL+'?f=geojson&outSR=4326&inSR=4326&returnGeometry=false&outFields=NO_LOT'
     +'&geometryType=esriGeometryPoint&spatialRel=esriSpatialRelIntersects'
     +'&geometry='+latlng.lng+','+latlng.lat;
-  fetch(url).then(function(r){return r.json();}).then(function(data){
+  fetchWithRetry(url).then(function(r){return r.json();}).then(function(data){
     identifying=false;
     if(!data.features||!data.features.length){setSb('Aucun lot cadastral a cet endroit',false);return;}
     var nl=data.features[0].properties.NO_LOT;
@@ -1078,7 +1089,7 @@ function loadNeighbors(){
   var url=CAD_URL+'?f=geojson&outSR=4326&returnGeometry=true&outFields=NO_LOT'
     +'&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&inSR=4326'
     +'&geometry='+bbox;
-  fetch(url).then(function(r){return r.json();}).then(function(data){
+  fetchWithRetry(url).then(function(r){return r.json();}).then(function(data){
     var n=0;
     (data.features||[]).forEach(function(f){
       var nl=f.properties.NO_LOT;
