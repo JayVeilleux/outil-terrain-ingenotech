@@ -821,10 +821,8 @@ body.capture-active .well-label{display:block}
     <div class="lg"><div class="ld" style="background:transparent;border:2px solid #1a5fa8"></div>Lot recherche</div>
     <div class="lg"><div class="ld" style="background:transparent;border:2px solid #888"></div>Lot voisin (clic pour voir, puis confirmer)</div>
     <div class="lg"><div class="ld" style="background:#e65100"></div>Dimension du lot recherche</div>
-    <div class="lg"><div class="ld" style="background:#26a69a;border:1px dashed #00695c"></div>Marais/etang detecte (precis, MELCCFP)</div>
     <div class="lg"><div class="ld" style="background:#5e35b1;border-radius:50%"></div>Puits/forage (SIH - MELCCFP)</div>
     <div class="lg"><div class="ld" style="background:#1a6fc4"></div>Cours eau - couche gouv. (GRHQ)</div>
-    <div class="lg"><div class="ld" style="background:#e0665a"></div>Routes - couche gouv. (AQreseau)</div>
     <div class="lg"><div class="ld" style="background:repeating-linear-gradient(45deg,#e53935,#e53935 2px,#fff 2px,#fff 5px);border:1px solid #c62828"></div>Zone inondable (MRNF)</div>
     <div class="lg"><div class="ld" style="background:#2e7d32"></div>Milieux humides - Canards Illimites</div>
     <div class="lg"><div class="ld" style="background:#004da8"></div>Cours d'eau permanent (LiDAR MRNF)</div>
@@ -1248,10 +1246,8 @@ function buildCapLegend(){
   var items=[];
   items.push({sw:'background:transparent;border:2px solid #1a5fa8',label:'Lot '+(ALot?ALot.no_lot:'-')});
   if(NbrLayer.getLayers().length)items.push({sw:'background:transparent;border:2px solid #888',label:NbrLayer.getLayers().length+' lots voisins (100m)'});
-  if(MH.length)items.push({sw:'background:#26a69a;border:1px dashed #00695c',label:'Marais/etang detecte (precis, MELCCFP)'});
   if(WELLS.length)items.push({sw:'background:#5e35b1;border-radius:50%',label:WELLS.length+' puits/forage (SIH - MELCCFP)'});
   if(WON.hydro)items.push({sw:'background:#1a6fc4',label:'Cours eau - couche gouv. (GRHQ)'});
-  if(WON.road)items.push({sw:'background:#e0665a',label:'Routes - couche gouv. (AQreseau)'});
   if(WON.flood)items.push({sw:'background:repeating-linear-gradient(45deg,#e53935,#e53935 2px,#fff 2px,#fff 5px);border:1px solid #c62828',label:'Zone inondable (MRNF)'});
   if(WON.mhduc)items.push({sw:'background:#2e7d32',label:'Milieux humides - Canards Illimites'});
   if(WON.lits){
