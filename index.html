@@ -808,6 +808,7 @@ body.capture-active .well-label{display:block}
       <button class="btn on" id="btn-mhduc" onclick="tglL('mhduc')">MH - Canards Illimites</button>
       <button class="btn" id="btn-contour" onclick="tglL('contour')">Courbes 1m</button>
       <button class="btn" id="btn-lits" onclick="tglL('lits')">Reseau hydro et sens d'ecoulement</button>
+      <button class="btn on" id="btn-dims" onclick="tglDims()">Longueurs des cotes</button>
     </div>
     <div class="fp-statusline"><div id="mhdot" class="fp-dot"></div><span id="mhtxt">MH: en attente</span><button class="btn tiny" onclick="loadMH()" title="Recharger MH">&#8635;</button></div>
     <div class="fp-statusline"><div id="welldot" class="fp-dot"></div><span id="welltxt">Puits: en attente</span><button class="btn tiny" onclick="loadWells()" title="Recharger puits">&#8635;</button></div>
@@ -819,6 +820,7 @@ body.capture-active .well-label{display:block}
   <div class="fp-expand" id="legendExpand" style="display:none">
     <div class="lg"><div class="ld" style="background:transparent;border:2px solid #1a5fa8"></div>Lot recherche</div>
     <div class="lg"><div class="ld" style="background:transparent;border:2px solid #888"></div>Lot voisin (clic pour voir, puis confirmer)</div>
+    <div class="lg"><div class="ld" style="background:#e65100"></div>Longueurs des cotes du lot recherche</div>
     <div class="lg"><div class="ld" style="background:#26a69a;border:1px dashed #00695c"></div>Marais/etang detecte (precis, MELCCFP)</div>
     <div class="lg"><div class="ld" style="background:#5e35b1;border-radius:50%"></div>Puits/forage (SIH - MELCCFP)</div>
     <div class="lg"><div class="ld" style="background:#1a6fc4"></div>Cours eau - couche gouv. (GRHQ)</div>
@@ -845,8 +847,8 @@ body.capture-active .well-label{display:block}
 
 document.addEventListener('DOMContentLoaded', function() {
 
-var MAP, WMS={}, WON={hydro:true,road:true,flood:true,mhduc:true,contour:false,lits:false};
-var ALot=null, ABnd=null, LotLayer, NbrLayer;
+var MAP, WMS={}, WON={hydro:true,road:true,flood:true,mhduc:true,contour:false,lits:false,dims:true};
+var ALot=null, ABnd=null, LotLayer, NbrLayer, DimLayer, CurRing=null;
 var MH=[], MHLayer;
 var WELLS=[], WellLayer;
 var measuring=false, measurePts=[], MeasureLayer;
@@ -962,6 +964,40 @@ WellLayer=L.layerGroup().addTo(MAP);
 MeasureLayer=L.layerGroup().addTo(MAP);
 LotLayer=L.layerGroup().addTo(MAP);
 NbrLayer=L.layerGroup().addTo(MAP);
+DimLayer=L.layerGroup().addTo(MAP);
+// Longueurs des cotes du lot recherche: dessinees a part pour pouvoir les
+// cacher/afficher independamment via la section Couches sans toucher au
+// contour du lot ni a son numero.
+function drawSideLabels(ring){
+  CurRing=ring;
+  DimLayer.clearLayers();
+  if(!WON.dims||!ring||ring.length<=2)return;
+  var latMidL=(ABnd.sla+ABnd.nla)/2, cosL=Math.cos(latMidL*Math.PI/180);
+  var bearing=function(p1,p2){return Math.atan2((p2[1]-p1[1])*cosL,p2[0]-p1[0])*180/Math.PI;};
+  var angDiff=function(a,b){var d=Math.abs(a-b)%360;return d>180?360-d:d;};
+  var ANGLE_THRESH=15;
+  var eb=ring.map(function(p,i){return bearing(p,ring[(i+1)%ring.length]);});
+  var runs=[],curStart=0;
+  for(var k=1;k<ring.length;k++){
+    if(angDiff(eb[k-1],eb[k])>ANGLE_THRESH){runs.push({s:curStart,e:k-1});curStart=k;}
+  }
+  runs.push({s:curStart,e:ring.length-1});
+  runs.forEach(function(r){
+    var p1=ring[r.s],p2=ring[(r.e+1)%ring.length];
+    var d=MAP.distance(p1,p2);
+    if(d<1)return;
+    var mid=[(p1[0]+p2[0])/2,(p1[1]+p2[1])/2];
+    var txt=d<1000?(Math.round(d*10)/10)+' m':(Math.round(d/100)/10)+' km';
+    L.circleMarker(mid,{radius:0,opacity:0,fillOpacity:0})
+      .addTo(DimLayer)
+      .bindTooltip(txt,{permanent:true,direction:'center',className:'lot-side-label'});
+  });
+}
+window.tglDims=function(){
+  WON.dims=!WON.dims;
+  document.getElementById('btn-dims').className='btn'+(WON.dims?' on':'');
+  drawSideLabels(CurRing);
+};
 
 function setSb(txt,ok){
   var el=document.getElementById('sb');
@@ -1008,31 +1044,7 @@ function loadLot(noLotRaw){
       var rf=ring[0],rl=ring[ring.length-1];
       if(rf[0]===rl[0]&&rf[1]===rl[1])ring.pop();
     }
-    // Regroupe les segments quasi alignes (bruit de digitalisation du cadastre,
-    // souvent des petits segments de ~1m) en un seul cote avant de mesurer,
-    // pour ne pas afficher une foule de petites longueurs sur une ligne droite.
-    if(ring.length>2){
-      var latMidL=(ABnd.sla+ABnd.nla)/2, cosL=Math.cos(latMidL*Math.PI/180);
-      var bearing=function(p1,p2){return Math.atan2((p2[1]-p1[1])*cosL,p2[0]-p1[0])*180/Math.PI;};
-      var angDiff=function(a,b){var d=Math.abs(a-b)%360;return d>180?360-d:d;};
-      var ANGLE_THRESH=15;
-      var eb=ring.map(function(p,i){return bearing(p,ring[(i+1)%ring.length]);});
-      var runs=[],curStart=0;
-      for(var k=1;k<ring.length;k++){
-        if(angDiff(eb[k-1],eb[k])>ANGLE_THRESH){runs.push({s:curStart,e:k-1});curStart=k;}
-      }
-      runs.push({s:curStart,e:ring.length-1});
-      runs.forEach(function(r){
-        var p1=ring[r.s],p2=ring[(r.e+1)%ring.length];
-        var d=MAP.distance(p1,p2);
-        if(d<1)return;
-        var mid=[(p1[0]+p2[0])/2,(p1[1]+p2[1])/2];
-        var txt=d<1000?(Math.round(d*10)/10)+' m':(Math.round(d/100)/10)+' km';
-        L.circleMarker(mid,{radius:0,opacity:0,fillOpacity:0})
-          .addTo(LotLayer)
-          .bindTooltip(txt,{permanent:true,direction:'center',className:'lot-side-label'});
-      });
-    }
+    drawSideLabels(ring);
     MAP.fitBounds(poly.getBounds(),{padding:[60,60]});
     document.getElementById('cl').textContent=ALot.no_lot;
     document.getElementById('lotinput').value=ALot.no_lot;
