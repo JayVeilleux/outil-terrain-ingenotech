@@ -827,7 +827,7 @@ body.capture-active .well-label{display:block}
     <div class="lg"><div class="ld" style="background:#2e7d32"></div>Milieux humides - Canards Illimites</div>
     <div class="lg"><div class="ld" style="background:#004da8"></div>Cours d'eau permanent (LiDAR MRNF)</div>
     <div class="lg"><div class="ld" style="background:#73b2ff"></div>Cours d'eau intermittent (LiDAR MRNF)</div>
-    <div class="lg"><div class="ld" style="background:#005ce6"></div>Sens d'ecoulement, fleche (GRHQ)</div>
+    <div class="lg"><div class="ld" style="width:0;height:0;background:transparent;border-radius:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:10px solid #005ce6"></div>Sens d'ecoulement, fleche (GRHQ)</div>
     <div class="lg"><div class="ld" style="background:#3d7e6a"></div>Ecotone riverain (LiDAR MRNF)</div>
     <div class="lg"><div class="ld" style="background:#e8a97d"></div>Courbes de niveau (1m, LiDAR MRNF)</div>
   </div>
@@ -1253,7 +1253,7 @@ function buildCapLegend(){
   if(WON.lits){
     items.push({sw:'background:#004da8',label:"Cours d'eau permanent (LiDAR MRNF)"});
     items.push({sw:'background:#73b2ff',label:"Cours d'eau intermittent (LiDAR MRNF)"});
-    items.push({sw:'background:#005ce6',label:"Sens d'ecoulement, fleche (GRHQ)"});
+    items.push({sw:'width:0;height:0;background:transparent;border-radius:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:10px solid #005ce6',label:"Sens d'ecoulement, fleche (GRHQ)"});
     items.push({sw:'background:#3d7e6a',label:'Ecotone riverain (LiDAR MRNF)'});
   }
   if(WON.contour)items.push({sw:'background:#e8a97d',label:'Courbes de niveau (1m, LiDAR MRNF)'});
