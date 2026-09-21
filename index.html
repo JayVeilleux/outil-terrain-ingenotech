@@ -804,10 +804,10 @@ body.capture-active .well-label{display:block}
     <div class="row">
       <button class="btn on" id="btn-hydro" onclick="tglL('hydro')">Cours eau</button>
       <button class="btn on" id="btn-road" onclick="tglL('road')">Routes</button>
-      <button class="btn on" id="btn-flood" onclick="tglL('flood')">Zone inondable</button>
+      <button class="btn" id="btn-flood" onclick="tglL('flood')">Zone inondable</button>
       <button class="btn on" id="btn-mhduc" onclick="tglL('mhduc')">MH - Canards Illimites</button>
       <button class="btn" id="btn-contour" onclick="tglL('contour')">Courbes 1m</button>
-      <button class="btn" id="btn-lits" onclick="tglL('lits')">Reseau hydro et sens d'ecoulement</button>
+      <button class="btn on" id="btn-lits" onclick="tglL('lits')">Reseau hydro et sens d'ecoulement</button>
       <button class="btn on" id="btn-dims" onclick="tglDims()">Dimension du lot</button>
     </div>
     <div class="fp-statusline"><div id="mhdot" class="fp-dot"></div><span id="mhtxt">MH: en attente</span><button class="btn tiny" onclick="loadMH()" title="Recharger MH">&#8635;</button></div>
@@ -850,7 +850,7 @@ body.capture-active .well-label{display:block}
 
 document.addEventListener('DOMContentLoaded', function() {
 
-var MAP, WMS={}, WON={hydro:true,road:true,flood:true,mhduc:true,contour:false,lits:false,dims:true};
+var MAP, WMS={}, WON={hydro:true,road:true,flood:false,mhduc:true,contour:false,lits:true,dims:true};
 var ALot=null, ABnd=null, LotLayer, NbrLayer, DimLayer, CurRing=null;
 var MH=[], MHLayer;
 var WELLS=[], WellLayer;
