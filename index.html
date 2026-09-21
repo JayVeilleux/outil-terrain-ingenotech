@@ -1340,11 +1340,18 @@ function exitCapture(){
 window.tglCapture=function(){
   if(captureMode)exitCapture();
 };
+function activateAllLayers(){
+  Object.keys(WMS).forEach(function(k){
+    if(!WON[k]){WON[k]=true;WMS[k].addTo(MAP);document.getElementById('btn-'+k).className='btn on';}
+  });
+  if(!WON.dims){WON.dims=true;document.getElementById('btn-dims').className='btn on';drawSideLabels(CurRing);}
+}
 window.capturePreset=function(key){
   if(searching){setSb('Patiente - recherche en cours...',false);return;}
   if(!ALot){setSb('Recherche un lot avant de capturer',false);return;}
   var p=CAP_PRESETS[key];
   CAP_W_M=p.w;CAP_H_M=p.h;CAP_RATIO=CAP_W_M/CAP_H_M;
+  if(key==='base')activateAllLayers();
   setBase(p.base);
   enterCapture();
 };
