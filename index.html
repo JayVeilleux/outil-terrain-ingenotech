@@ -827,7 +827,10 @@ body.capture-active .well-label{display:block}
     <div class="lg"><div class="ld" style="background:#e0665a"></div>Routes - couche gouv. (AQreseau)</div>
     <div class="lg"><div class="ld" style="background:repeating-linear-gradient(45deg,#e53935,#e53935 2px,#fff 2px,#fff 5px);border:1px solid #c62828"></div>Zone inondable (MRNF)</div>
     <div class="lg"><div class="ld" style="background:#2e7d32"></div>Milieux humides - Canards Illimites</div>
-    <div class="lg"><div class="ld" style="background:#1a6fc4;border:1px dashed #0a3d8f"></div>Reseau hydro, fleches de sens d'ecoulement (GRHQ) et ecotone riverain (LiDAR MRNF)</div>
+    <div class="lg"><div class="ld" style="background:#004da8"></div>Cours d'eau permanent (LiDAR MRNF)</div>
+    <div class="lg"><div class="ld" style="background:#73b2ff"></div>Cours d'eau intermittent (LiDAR MRNF)</div>
+    <div class="lg"><div class="ld" style="background:#005ce6"></div>Sens d'ecoulement, fleche (GRHQ)</div>
+    <div class="lg"><div class="ld" style="background:#3d7e6a"></div>Ecotone riverain (LiDAR MRNF)</div>
     <div class="lg"><div class="ld" style="background:#e8a97d"></div>Courbes de niveau (1m, LiDAR MRNF)</div>
   </div>
 </div>
@@ -1251,7 +1254,12 @@ function buildCapLegend(){
   if(WON.road)items.push({sw:'background:#e0665a',label:'Routes - couche gouv. (AQreseau)'});
   if(WON.flood)items.push({sw:'background:repeating-linear-gradient(45deg,#e53935,#e53935 2px,#fff 2px,#fff 5px);border:1px solid #c62828',label:'Zone inondable (MRNF)'});
   if(WON.mhduc)items.push({sw:'background:#2e7d32',label:'Milieux humides - Canards Illimites'});
-  if(WON.lits)items.push({sw:'background:#1a6fc4;border:1px dashed #0a3d8f',label:"Reseau hydro, fleches de sens d'ecoulement (GRHQ) et ecotone riverain (LiDAR MRNF)"});
+  if(WON.lits){
+    items.push({sw:'background:#004da8',label:"Cours d'eau permanent (LiDAR MRNF)"});
+    items.push({sw:'background:#73b2ff',label:"Cours d'eau intermittent (LiDAR MRNF)"});
+    items.push({sw:'background:#005ce6',label:"Sens d'ecoulement, fleche (GRHQ)"});
+    items.push({sw:'background:#3d7e6a',label:'Ecotone riverain (LiDAR MRNF)'});
+  }
   if(WON.contour)items.push({sw:'background:#e8a97d',label:'Courbes de niveau (1m, LiDAR MRNF)'});
   var html='<div class="cb-title">Legende</div><div class="cb-legend">';
   items.forEach(function(it){html+='<div class="cb-item"><div class="cb-sw" style="'+it.sw+'"></div>'+it.label+'</div>';});
