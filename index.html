@@ -739,6 +739,7 @@ body{background:#eee;touch-action:manipulation}
 
 body.capture-active .fp-chrome{display:none}
 body.capture-active .well-label{display:block}
+body.capture-wide .lot-label-nbr{display:none}
 
 @media (max-width:640px){
   .fp-topleft{width:auto;max-width:calc(100vw - 28px)}
@@ -1367,6 +1368,7 @@ function exitCapture(){
   document.getElementById('capZoomRow').style.display='none';
   document.getElementById('capLoadRow').style.display='none';
   document.body.classList.remove('capture-active');
+  document.body.classList.remove('capture-wide');
   MAP.dragging.enable();MAP.scrollWheelZoom.enable();MAP.doubleClickZoom.enable();
   MAP.touchZoom.enable();MAP.boxZoom.enable();
   if(MAP.tap)MAP.tap.enable();
@@ -1393,6 +1395,7 @@ window.capturePreset=function(key){
   activateAllLayers();
   if(key==='wide'&&WON.dims){WON.dims=false;document.getElementById('btn-dims').className='btn';drawSideLabels(CurRing);}
   if((key==='base'||key==='sat')&&WON.flood){WON.flood=false;MAP.removeLayer(WMS.flood);document.getElementById('btn-flood').className='btn';}
+  document.body.classList.toggle('capture-wide',key==='wide');
   setBase(p.base);
   enterCapture();
 };
