@@ -1391,6 +1391,7 @@ window.capturePreset=function(key){
   var p=CAP_PRESETS[key];
   CAP_W_M=p.w;CAP_H_M=p.h;CAP_RATIO=CAP_W_M/CAP_H_M;
   if(key==='base')activateAllLayers();
+  if(key==='wide'&&WON.dims){WON.dims=false;document.getElementById('btn-dims').className='btn';drawSideLabels(CurRing);}
   setBase(p.base);
   enterCapture();
 };
