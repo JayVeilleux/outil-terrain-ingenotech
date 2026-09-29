@@ -1037,7 +1037,7 @@ function loadLot(noLotRaw){
   var url=CAD_URL+'?f=geojson&outSR=4326&returnGeometry=true&outFields=NO_LOT&where='+encodeURIComponent(where);
   fetchWithRetry(url).then(function(r){return r.json();}).then(function(data){
     searching=false;
-    if(!data.features||!data.features.length){setSb('Lot '+noLot+' introuvable au cadastre',false);return;}
+    if(!data.features||!data.features.length){setSb('Lot '+noLot+' introuvable au cadastre - si le lot a ete subdivise recemment, cherche le nouveau numero (les donnees gouvernementales prennent du temps a se mettre a jour)',false);return;}
     var f=data.features[0];
     var co=f.geometry.coordinates[0].map(function(c){return[c[1],c[0]];});
     ALot={no_lot:f.properties.NO_LOT,coords:co};
